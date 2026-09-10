@@ -8,6 +8,9 @@
   <script>document.documentElement.dataset.theme=localStorage.getItem('gi-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')</script>
   <link rel="stylesheet" href="./app.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../gi-supabase-config.js"></script>
+  <script src="../gi-profile.js"></script>
+  <script src="../gi-auth-guard.js"></script>
   <script src="./supabase-config.js"></script>
 </head>
 <body>
@@ -29,6 +32,6 @@
     </main>
   </div></div>
   <script src="./app.js"></script>
-  <script src="../gi-nav.js"></script>
+  <script>window.addEventListener('load',()=>{if(!document.getElementById('giNav')){const s=document.createElement('script');s.src='../gi-nav.js';document.body.appendChild(s)}})</script>
 </body>
 </html>
