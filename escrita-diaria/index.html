@@ -1,200 +1,69 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
   <title>Escrita diária</title>
   <link rel="stylesheet" href="./app.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase-config.js"></script>
-  <style>
-    /* Sessão de escrita inspirada no composer do ChatGPT */
-    #view-session{padding-top:10px}
-    #view-session .session{max-width:760px;margin:0 auto}
-    #view-session .session-header{margin:0 0 18px;padding:0 4px;align-items:flex-start}
-    #view-session .session-header .timer{display:none}
-    #view-session .editor-wrap{
-      border:1px solid var(--border);
-      border-bottom:0;
-      border-radius:26px 26px 0 0;
-      background:var(--surface-2);
-      padding:20px 20px 8px;
-      box-shadow:var(--shadow);
-    }
-    #view-session textarea{
-      min-height:46vh;
-      max-height:62vh;
-      padding:0;
-      background:transparent;
-      font-size:19px;
-      line-height:1.62;
-    }
-    #view-session .session-bottom{
-      margin:0;
-      padding:10px 12px 12px;
-      min-height:58px;
-      border:1px solid var(--border);
-      border-top:0;
-      border-radius:0 0 26px 26px;
-      background:var(--surface-2);
-      box-shadow:var(--shadow);
-    }
-    #view-session .session-bottom>.soft-message{display:none}
-    #view-session .session-bottom .row{width:100%;display:grid;grid-template-columns:42px 1fr 42px;gap:10px;align-items:center}
-    #view-session #startTimerBtn,
-    #view-session #finishBtn{
-      width:40px;height:40px;padding:0;border-radius:50%;display:grid;place-items:center;font-size:0;font-weight:500
-    }
-    #view-session #startTimerBtn{background:transparent;color:var(--text);border:1px solid var(--border)}
-    #view-session #startTimerBtn::before{content:'Ⅱ';font-size:18px;line-height:1;letter-spacing:-2px}
-    #view-session #startTimerBtn.paused::before{content:'▶';font-size:15px;letter-spacing:0;margin-left:2px}
-    #view-session #finishBtn{background:var(--accent);color:var(--accent-contrast);border-color:var(--accent)}
-    #view-session #finishBtn::before{content:'↑';font-size:24px;line-height:1;font-weight:500;transform:translateY(-1px)}
-    #view-session #finishBtn:disabled{opacity:.28;cursor:default}
-    #view-session .composer-timer{justify-self:center;color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
-    #view-session .composer-hint{margin-top:10px;text-align:center;color:var(--muted);font-size:12px;min-height:17px}
-    body.focus-mode .topbar{opacity:1;pointer-events:auto}
-    body.focus-mode #view-session .secondary-action{opacity:1}
-    @media(max-width:640px){
-      #view-session{padding-top:0}
-      #view-session textarea{min-height:52vh;max-height:58vh;font-size:18px}
-      #view-session .editor-wrap{border-radius:22px 22px 0 0;padding:18px 16px 8px}
-      #view-session .session-bottom{border-radius:0 0 22px 22px}
-    }
-  </style>
 </head>
 <body>
-  <div class="app">
-    <div class="shell">
-      <header class="topbar">
-        <div class="brand">Escrita diária</div>
-        <div class="top-actions">
-          <nav class="nav" aria-label="Navegação">
-            <button data-nav="home" class="active">Escrever</button>
-            <button data-nav="history">Histórico</button>
-          </nav>
-          <button id="themeToggle" class="theme-toggle" type="button" aria-label="Alternar tema" title="Alternar tema">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"></path></svg>
-          </button>
-          <div class="account"><span id="accountEmail"></span><button id="logoutBtn">Sair</button></div>
+  <div class="app"><div class="shell">
+    <header class="topbar">
+      <div class="brand">Escrita diária</div>
+      <div class="top-actions">
+        <nav class="nav" aria-label="Navegação"><button data-nav="home" class="active">Escrever</button><button data-nav="history">Histórico</button></nav>
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Alternar tema" title="Alternar tema"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"></path></svg></button>
+        <div class="account"><span id="accountEmail"></span><button id="logoutBtn">Sair</button></div>
+      </div>
+    </header>
+    <main>
+      <section id="view-auth" class="view"><div class="auth-wrap"><h1>Escrita diária</h1><p class="subtitle">Entre para acessar seus textos.</p><input id="emailInput" type="email" placeholder="E-mail" autocomplete="email"><input id="passwordInput" type="password" placeholder="Senha" autocomplete="current-password"><button id="loginBtn" class="btn primary">Entrar</button><div id="authMsg" class="auth-msg"></div></div></section>
+
+      <section id="view-home" class="view active">
+        <div class="hero"><h1>10 minutos para pensar escrevendo.</h1><p class="subtitle">Um espaço silencioso para recuperar fluidez, atenção, vocabulário e confiança — sem sugestões, correções ou avaliação.</p></div>
+        <div class="home-grid">
+          <div class="panel"><div class="field"><label>Categoria</label><div id="categoryPills" class="category-pills" role="group" aria-label="Categoria"></div></div><div class="home-action"><button id="drawBtn" class="btn primary">Sortear tema</button></div><div class="streak"><span id="streakText">Nenhum dia registrado ainda.</span></div></div>
+          <div id="promptCard" class="prompt-card" hidden><div id="promptCategory" class="eyebrow"></div><p id="promptText" class="prompt"></p><div id="promptSkill" class="category-skill"></div><div class="prompt-actions"><button id="startSessionBtn" class="btn primary">Escrever este tema</button><button id="redrawBtn" class="btn">Sortear outro</button></div></div>
         </div>
-      </header>
-      <main>
-        <section id="view-auth" class="view">
-          <div class="auth-wrap"><h1>Escrita diária</h1><p class="subtitle">Entre para acessar seus textos.</p><input id="emailInput" type="email" placeholder="E-mail" autocomplete="email"><input id="passwordInput" type="password" placeholder="Senha" autocomplete="current-password"><button id="loginBtn" class="btn primary">Entrar</button><div id="authMsg" class="auth-msg"></div></div>
-        </section>
+      </section>
 
-        <section id="view-home" class="view active">
-          <div class="hero"><h1>10 minutos para pensar escrevendo.</h1><p class="subtitle">Um espaço silencioso para recuperar fluidez, atenção, vocabulário e confiança — sem sugestões, correções ou avaliação.</p></div>
-          <div class="home-grid">
-            <div class="panel"><div class="row"><div class="field"><label>Categoria</label><div id="categoryPills" class="category-pills" role="group" aria-label="Categoria"></div></div><button id="drawBtn" class="btn primary">Sortear tema</button></div><div class="streak"><span class="dot"></span><span id="streakText">Nenhum dia registrado ainda.</span></div></div>
-            <div id="promptCard" class="prompt-card" hidden><div id="promptCategory" class="eyebrow"></div><p id="promptText" class="prompt"></p><div class="prompt-actions"><button id="startSessionBtn" class="btn primary">Escrever este tema</button><button id="redrawBtn" class="btn">Sortear outro</button></div></div>
+      <section id="view-session" class="view">
+        <div class="session">
+          <div class="writing-prompt-card">
+            <div id="sessionCategory" class="eyebrow"></div>
+            <div id="sessionSkill" class="category-skill"></div>
+            <div id="sessionTheme" class="session-theme"></div>
+            <div class="writing-prompt-footer"><button id="sessionRedrawBtn" type="button">Sortear outro</button><span id="savedCount">0 sessões salvas</span></div>
           </div>
-        </section>
 
-        <section id="view-session" class="view">
-          <div class="session">
-            <div class="session-header">
-              <div><div id="sessionCategory" class="eyebrow"></div><div id="sessionTheme" class="session-theme"></div></div>
-              <div id="timerDisplay" class="timer">10:00</div>
-            </div>
-            <div class="editor-wrap"><textarea id="editor" spellcheck="false" autocapitalize="sentences" autocomplete="off" autocorrect="off" placeholder="Escreva aqui..."></textarea></div>
-            <div class="session-bottom">
-              <div id="softMessage" class="soft-message"></div>
-              <div class="row">
-                <button id="startTimerBtn" class="btn secondary-action" type="button" aria-label="Pausar timer" title="Pausar timer">Pausar</button>
+          <div class="composer">
+            <textarea id="editor" spellcheck="false" autocapitalize="sentences" autocomplete="off" autocorrect="off" placeholder="Comece a escrever..."></textarea>
+            <div class="composer-bar">
+              <div class="composer-left">
+                <button id="startTimerBtn" class="icon-button play-button" type="button" aria-label="Iniciar timer" title="Iniciar timer">
+                  <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.3v9.4L17 12 9 7.3Z"></path></svg>
+                  <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7v10M15 7v10"></path></svg>
+                </button>
                 <span id="composerTimer" class="composer-timer">10:00</span>
-                <button id="finishBtn" class="btn secondary-action" type="button" disabled aria-label="Concluir texto" title="Concluir texto">Concluir</button>
               </div>
+              <button id="finishBtn" class="icon-button send-button" type="button" disabled aria-label="Concluir texto" title="Concluir texto">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18V6M7.5 10.5 12 6l4.5 4.5"></path></svg>
+              </button>
             </div>
-            <div id="composerHint" class="composer-hint">O timer começa quando você começar a escrever.</div>
           </div>
-        </section>
+          <div id="softMessage" class="composer-hint">O timer começa quando você começar a escrever.</div>
+          <div id="timerDisplay" class="timer" hidden>10:00</div>
+        </div>
+      </section>
 
-        <section id="view-summary" class="view"><div class="summary"><div><div id="summaryCategory" class="eyebrow"></div><h2>Sessão concluída</h2></div><div class="panel"><div id="summaryTheme" class="summary-theme"></div></div><div class="stats"><div class="stat"><strong id="summaryWords">0</strong><span>palavras</span></div><div class="stat"><strong id="summaryTime">0 min</strong><span>tempo total</span></div><div class="stat"><strong id="summaryDate">—</strong><span>data</span></div></div><div class="panel reflection"><div class="eyebrow">Reflexão opcional</div><div class="reflection-item"><div>Foi fácil ou difícil começar?</div><div class="scale" data-reflect="start"><button data-value="fácil">Fácil</button><button data-value="neutro">Neutro</button><button data-value="difícil">Difícil</button></div></div><div class="reflection-item"><div>Em algum momento você travou tentando encontrar palavras?</div><div class="scale" data-reflect="words"><button data-value="não">Não</button><button data-value="um pouco">Um pouco</button><button data-value="sim">Sim</button></div></div><div class="reflection-item"><div>Você conseguiu desenvolver uma ideia além do primeiro pensamento?</div><div class="scale" data-reflect="depth"><button data-value="sim">Sim</button><button data-value="mais ou menos">Mais ou menos</button><button data-value="não">Não</button></div></div></div><div class="footer-actions"><button id="saveSessionBtn" class="btn primary">Salvar no histórico</button><button id="newSessionBtn" class="btn">Nova sessão</button></div></div></section>
+      <section id="view-summary" class="view"><div class="summary"><div><div id="summaryCategory" class="eyebrow"></div><h2>Sessão concluída</h2></div><div class="panel"><div id="summaryTheme" class="summary-theme"></div></div><div class="stats"><div class="stat"><strong id="summaryWords">0</strong><span>palavras</span></div><div class="stat"><strong id="summaryTime">0 min</strong><span>tempo total</span></div><div class="stat"><strong id="summaryDate">—</strong><span>data</span></div></div><div class="panel reflection"><div class="eyebrow">Reflexão opcional</div><div class="reflection-item"><div>Foi fácil ou difícil começar?</div><div class="scale" data-reflect="start"><button data-value="fácil">Fácil</button><button data-value="neutro">Neutro</button><button data-value="difícil">Difícil</button></div></div><div class="reflection-item"><div>Em algum momento você travou tentando encontrar palavras?</div><div class="scale" data-reflect="words"><button data-value="não">Não</button><button data-value="um pouco">Um pouco</button><button data-value="sim">Sim</button></div></div><div class="reflection-item"><div>Você conseguiu desenvolver uma ideia além do primeiro pensamento?</div><div class="scale" data-reflect="depth"><button data-value="sim">Sim</button><button data-value="mais ou menos">Mais ou menos</button><button data-value="não">Não</button></div></div></div><div class="footer-actions"><button id="saveSessionBtn" class="btn primary">Salvar no histórico</button><button id="newSessionBtn" class="btn">Nova sessão</button></div></div></section>
 
-        <section id="view-history" class="view"><div class="history"><h2 class="history-title">Histórico</h2><div class="history-dashboard"><div class="history-stat"><div class="value" id="histDays">0</div><div class="label">dias</div><div class="note">Dias únicos de escrita</div></div><div class="history-stat"><span id="recordFlame" class="record-flame" aria-label="Recorde de sequência"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.6 2.7c.8 3.5-1.7 4.8-1 7.1.4 1.2 1.5 1.8 2.5 1.2 1.1-.7 1.3-2.2.8-3.6 3 2 4.6 4.6 4.1 7.5-.6 3.9-3.8 6.4-7.5 6.4-4.1 0-7.3-2.8-7.5-6.7-.2-3.3 1.7-6.3 5-8.5-.2 2.4.5 4 1.9 4.7-.4-3.2.6-5.9 1.7-8.1Z"></path></svg></span><div class="value" id="histStreak">0</div><div class="label">dias seguidos</div><div class="note good" id="streakNote">—</div></div><div class="history-stat"><div class="value" id="histMinutes">0</div><div class="label">minutos</div><div class="note">Tempo total de escrita</div></div><div class="history-stat"><div class="value" id="histWords">0</div><div class="label">palavras</div><div class="note">Total de palavras</div></div></div><div id="historyList" class="history-list-old"></div><div class="history-footer"><button id="backToWriteBtn" class="btn">Voltar a escrever</button></div></div></section>
-      </main>
-    </div>
-  </div>
-
+      <section id="view-history" class="view"><div class="history"><h2 class="history-title">Histórico</h2><div class="history-dashboard"><div class="history-stat"><div class="value" id="histDays">0</div><div class="label">dias</div><div class="note">Dias únicos de escrita</div></div><div class="history-stat"><span id="recordFlame" class="record-flame" aria-label="Recorde de sequência"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.6 2.7c.8 3.5-1.7 4.8-1 7.1.4 1.2 1.5 1.8 2.5 1.2 1.1-.7 1.3-2.2.8-3.6 3 2 4.6 4.6 4.1 7.5-.6 3.9-3.8 6.4-7.5 6.4-4.1 0-7.3-2.8-7.5-6.7-.2-3.3 1.7-6.3 5-8.5-.2 2.4.5 4 1.9 4.7-.4-3.2.6-5.9 1.7-8.1Z"></path></svg></span><div class="value" id="histStreak">0</div><div class="label">dias seguidos</div><div class="note good" id="streakNote">—</div></div><div class="history-stat"><div class="value" id="histMinutes">0</div><div class="label">minutos</div><div class="note">Tempo total de escrita</div></div><div class="history-stat"><div class="value" id="histWords">0</div><div class="label">palavras</div><div class="note">Total de palavras</div></div></div><div id="historyList" class="history-list-old"></div><div class="history-footer"><button id="backToWriteBtn" class="btn">Voltar a escrever</button></div></div></section>
+    </main>
+  </div></div>
   <script src="./app.js"></script>
-  <script>
-    (()=>{
-      const editor=document.getElementById('editor');
-      const pauseBtn=document.getElementById('startTimerBtn');
-      const finish=document.getElementById('finishBtn');
-      const composerTimer=document.getElementById('composerTimer');
-      const oldTimer=document.getElementById('timerDisplay');
-      const hint=document.getElementById('composerHint');
-      const startSessionButton=document.getElementById('startSessionBtn');
-      let running=false, started=false, paused=false, segmentStarted=0, elapsed=0, tickId=null;
-
-      const elapsedSeconds=()=>elapsed+(running?Math.floor((Date.now()-segmentStarted)/1000):0);
-      const display=()=>{
-        const e=elapsedSeconds(),remaining=Math.max(0,600-e);
-        const text=e<=600?formatTime(remaining):`+${formatTime(e-600)}`;
-        composerTimer.textContent=text;
-        oldTimer.textContent=text;
-        if(e>=600) hint.textContent='10 minutos concluídos. Pode parar ou continuar.';
-      };
-      const stopTick=()=>{if(tickId){clearInterval(tickId);tickId=null}};
-      const begin=()=>{
-        if(running)return;
-        started=true;paused=false;running=true;segmentStarted=Date.now();
-        pauseBtn.classList.remove('paused');pauseBtn.setAttribute('aria-label','Pausar timer');pauseBtn.title='Pausar timer';
-        hint.textContent='';
-        stopTick();tickId=setInterval(display,250);display();
-      };
-      const pause=()=>{
-        if(!running)return;
-        elapsed+=Math.floor((Date.now()-segmentStarted)/1000);running=false;paused=true;stopTick();display();
-        pauseBtn.classList.add('paused');pauseBtn.setAttribute('aria-label','Retomar timer');pauseBtn.title='Retomar timer';
-        hint.textContent='Timer pausado. Ao voltar a escrever, ele retoma sozinho.';
-      };
-      const reset=()=>{
-        stopTick();running=false;started=false;paused=false;segmentStarted=0;elapsed=0;
-        composerTimer.textContent='10:00';oldTimer.textContent='10:00';
-        pauseBtn.classList.add('paused');pauseBtn.setAttribute('aria-label','Iniciar timer');pauseBtn.title='Iniciar timer';
-        finish.disabled=true;hint.textContent='O timer começa quando você começar a escrever.';
-      };
-
-      startSessionButton.addEventListener('click',()=>setTimeout(reset,0));
-      editor.addEventListener('input',()=>{
-        finish.disabled=!editor.value.trim();
-        if(editor.value.length>0&&!running)begin();
-      });
-      editor.addEventListener('focus',()=>{
-        if(started&&paused&&editor.value.trim())begin();
-      });
-
-      pauseBtn.addEventListener('click',e=>{
-        e.preventDefault();e.stopImmediatePropagation();
-        if(!started||paused)begin();else pause();
-      },true);
-
-      finish.addEventListener('click',e=>{
-        e.preventDefault();e.stopImmediatePropagation();
-        if(!editor.value.trim())return;
-        if(running){elapsed+=Math.floor((Date.now()-segmentStarted)/1000);running=false;stopTick()}
-        const total=Math.max(1,elapsedSeconds());
-        sessionDraft={category:currentPrompt.category,prompt:currentPrompt.prompt,content:editor.value,word_count:wordCount(editor.value),duration_seconds:total,started_at:new Date(sessionStartedAt||Date.now()).toISOString(),written_at:new Date().toISOString()};
-        document.getElementById('summaryCategory').textContent=sessionDraft.category;
-        document.getElementById('summaryTheme').textContent=sessionDraft.prompt;
-        document.getElementById('summaryWords').textContent=sessionDraft.word_count;
-        document.getElementById('summaryTime').textContent=formatDuration(total);
-        document.getElementById('summaryDate').textContent=new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit'}).format(new Date(sessionDraft.written_at));
-        document.getElementById('saveSessionBtn').textContent='Salvar no histórico';
-        document.getElementById('saveSessionBtn').disabled=false;
-        document.querySelectorAll('.scale button').forEach(b=>b.classList.remove('selected'));
-        document.body.classList.remove('focus-mode');
-        showView('summary');
-      },true);
-
-      reset();
-    })();
-  </script>
 </body>
 </html>
