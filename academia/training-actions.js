@@ -66,3 +66,13 @@
     }
   };
 })();
+
+// Interface v2: destaque do treino de hoje, calendário mensal e ficha expansível.
+(()=>{
+  const metrics=document.querySelector('#week .metric-grid');
+  if(metrics&&!document.getElementById('todayWorkout'))metrics.insertAdjacentHTML('beforebegin','<div id="todayWorkout" class="today-workout-wrap"></div>');
+  const tab=document.querySelector('[data-view="week"]');
+  if(tab)tab.textContent='Hoje';
+  const css=document.createElement('link');css.rel='stylesheet';css.href='./gym-ui-v2.css';document.head.appendChild(css);
+  const script=document.createElement('script');script.src='./gym-ui-v2.js';document.body.appendChild(script);
+})();
