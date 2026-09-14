@@ -42,3 +42,27 @@
     renderTrainings();
   };
 })();
+
+// Evita submissões duplicadas enquanto upload/insert/update ainda estão em andamento.
+(()=>{
+  const saveButton=document.getElementById('formSave');
+  if(!saveButton)return;
+  let saving=false;
+  saveButton.onclick=async()=>{
+    if(saving||typeof formSave!=='function')return;
+    saving=true;
+    saveButton.disabled=true;
+    const originalLabel=saveButton.textContent;
+    saveButton.textContent='salvando…';
+    try{
+      await formSave();
+    }catch(error){
+      console.error(error);
+      alert('Não consegui salvar. Tente novamente.');
+    }finally{
+      saving=false;
+      saveButton.disabled=false;
+      saveButton.textContent=originalLabel;
+    }
+  };
+})();
