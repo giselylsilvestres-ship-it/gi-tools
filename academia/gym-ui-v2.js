@@ -4,10 +4,25 @@ let calendarMonth=new Date();calendarMonth.setDate(1);calendarMonth.setHours(12,
 function monthLabel(d){return d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}
 function todayPlan(){let k=key(new Date()),p=plans.find(x=>x.plan_date===k),sh=p&&sheets.find(x=>x.id===p.sheet_id),tr=sh&&trainings.find(x=>x.id===sh.training_id),ses=sessions.find(x=>x.session_date===k);return{k,p,sh,tr,ses}}
 function sessionCountForSheet(id){return sheetLinks(id).length}
+function ensureAllSheets(){
+  let el=$('allSheetsQuick');
+  if(el)return el;
+  const hero=$('todayWorkout');
+  if(!hero)return null;
+  hero.insertAdjacentHTML('afterend','<section id="allSheetsQuick" class="all-sheets-quick"><div class="quick-head"><strong>Todas as fichas</strong><span>abrir para consultar ou treinar</span></div><div id="allSheetsQuickList" class="quick-sheet-list"></div></section>');
+  return $('allSheetsQuick');
+}
+function renderAllSheets(){
+  const wrap=ensureAllSheets(),list=$('allSheetsQuickList');if(!wrap||!list)return;
+  const ordered=[...sheets].sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
+  list.innerHTML=ordered.map(s=>{const tr=trainings.find(t=>t.id===s.training_id);return `<button class="quick-sheet" data-quick-sheet="${s.id}"><span><strong>${esc(s.name)}</strong><small>${sessionCountForSheet(s.id)} exercícios · ${esc(tr?.name||'')}</small></span><b>›</b></button>`}).join('')||'<span class="meta">Nenhuma ficha criada.</span>';
+  list.querySelectorAll('[data-quick-sheet]').forEach(btn=>btn.onclick=()=>{currentDate=key(new Date());currentSheet=sheets.find(s=>s.id===btn.dataset.quickSheet);openSession()});
+}
 
 renderWeek=function(){
   const {k,sh,tr,ses}=todayPlan(),hero=$('todayWorkout');
   if(hero){hero.innerHTML=sh?`<button class="today-workout ${ses?.completed?'completed':''}" data-today-session><span class="today-kicker">hoje ${ses?.completed?'· concluído ✓':''}</span><strong>${esc(sh.name)}</strong><span>${sessionCountForSheet(sh.id)} exercícios · ${esc(tr?.name||'')}</span><b>${ses?.completed?'ver treino':'abrir ficha'} →</b></button>`:`<button class="today-workout empty" data-today-plan><span class="today-kicker">hoje</span><strong>Sem treino planejado</strong><span>Escolha uma ficha para hoje</span><b>planejar →</b></button>`;hero.querySelector('[data-today-session]')?.addEventListener('click',()=>{currentDate=k;currentSheet=sh;openSession()});hero.querySelector('[data-today-plan]')?.addEventListener('click',()=>{currentDate=k;openPicker()})}
+  renderAllSheets();
   $('weekTitle').textContent=monthLabel(calendarMonth);
   const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth(),first=new Date(y,m,1,12),last=new Date(y,m+1,0,12),offset=(first.getDay()+6)%7,total=Math.ceil((offset+last.getDate())/7)*7,start=new Date(y,m,1-offset,12),today=key(new Date());
   let html='<div class="cal-weekdays">'+['seg','ter','qua','qui','sex','sáb','dom'].map(x=>`<span>${x}</span>`).join('')+'</div><div class="month-days">';
@@ -19,7 +34,7 @@ function getExerciseHistory(exerciseId,currentSessionId){return logs.filter(x=>x
 function sessionExerciseCard(r,currentSessionId){let e=catalog.find(x=>x.id===r.exercise_id),img=e?.image_url||r.image_url,h=getExerciseHistory(r.exercise_id,currentSessionId),last=h.length?Number(h[0].weight):null,best=h.length?Math.max(...h.map(x=>Number(x.weight))):null,weight=r.weight??last??'';return`<article class="workout-exercise ${r.completed?'is-done':''}" data-ex="${r.exercise_id}" data-name="${esc(r.exercise_name)}" data-sets="${r.sets}" data-reps="${esc(r.reps)}"><button class="workout-summary" type="button"><input class="donebox" type="checkbox" ${r.completed?'checked':''} aria-label="Concluir exercício"><span class="workout-thumb">${img?`<img src="${esc(img)}" alt="">`:'⌁'}</span><span class="workout-copy"><strong>${esc(r.exercise_name)}</strong><small>${r.sets} × ${esc(r.reps)}${last!=null?` · última ${fmtKg(last)}`:''}</small></span><span class="chevron">⌄</span></button><div class="workout-detail"><div class="workout-prescription"><span><b>${r.sets} × ${esc(r.reps)}</b><small>prescrição</small></span><span><b>${fmtKg(last)}</b><small>última</small></span><span><b>${fmtKg(best)}</b><small>melhor</small></span></div><div class="today-load"><label>carga de hoje</label><div><button type="button" class="load-step" data-step="-0.5">−</button><input class="weight" type="number" step="0.5" value="${weight}" placeholder="—"><span>kg</span><button type="button" class="load-step" data-step="0.5">+</button></div></div>${img?`<div class="movement-image"><img src="${esc(img)}" alt="${esc(r.exercise_name)}"></div>`:''}<button type="button" class="finish-exercise">${r.completed?'✓ concluído':'concluir exercício'}</button></div></article>`}
 
 openSession=function(){
-  let ses=sessions.find(x=>x.session_date===currentDate),base=ses?logs.filter(x=>x.session_id===ses.id).sort((a,b)=>a.sort_order-b.sort_order):sheetLinks(currentSheet.id).map(l=>{let e=catalog.find(x=>x.id===l.exercise_id),h=getExerciseHistory(l.exercise_id);return{exercise_id:l.exercise_id,exercise_name:e?.name||'',sets:l.sets,reps:l.reps,weight:h[0]?.weight??'',completed:false,image_url:e?.image_url}}),done=base.filter(x=>x.completed).length;
+  let ses=sessions.find(x=>x.session_date===currentDate&&x.sheet_id===currentSheet.id),base=ses?logs.filter(x=>x.session_id===ses.id).sort((a,b)=>a.sort_order-b.sort_order):sheetLinks(currentSheet.id).map(l=>{let e=catalog.find(x=>x.id===l.exercise_id),h=getExerciseHistory(l.exercise_id);return{exercise_id:l.exercise_id,exercise_name:e?.name||'',sets:l.sets,reps:l.reps,weight:h[0]?.weight??'',completed:false,image_url:e?.image_url}}),done=base.filter(x=>x.completed).length;
   $('sessionDate').textContent=new Date(currentDate+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});$('sessionTitle').textContent=currentSheet.name;$('sessionNotes').value=ses?.notes||'';
   $('sessionExercises').innerHTML=`<div class="session-progress"><div><strong><span id="sessionDoneCount">${done}</span> / ${base.length}</strong><span> exercícios</span></div><div class="progress-track"><i id="sessionProgressBar" style="width:${base.length?done/base.length*100:0}%"></i></div></div>`+base.map(r=>sessionExerciseCard(r,ses?.id)).join('');
   const updateProgress=()=>{let cards=[...$('sessionExercises').querySelectorAll('.workout-exercise')],n=cards.filter(c=>c.querySelector('.donebox').checked).length;$('sessionDoneCount').textContent=n;$('sessionProgressBar').style.width=(cards.length?n/cards.length*100:0)+'%'};
