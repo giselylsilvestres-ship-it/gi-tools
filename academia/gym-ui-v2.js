@@ -4,29 +4,14 @@ let calendarMonth=new Date();calendarMonth.setDate(1);calendarMonth.setHours(12,
 function monthLabel(d){return d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}
 function todayPlan(){let k=key(new Date()),p=plans.find(x=>x.plan_date===k),sh=p&&sheets.find(x=>x.id===p.sheet_id),tr=sh&&trainings.find(x=>x.id===sh.training_id),ses=sessions.find(x=>x.session_date===k);return{k,p,sh,tr,ses}}
 function sessionCountForSheet(id){return sheetLinks(id).length}
-function ensureAllSheets(){
-  let el=$('allSheetsQuick');
-  if(el)return el;
-  const hero=$('todayWorkout');
-  if(!hero)return null;
-  hero.insertAdjacentHTML('afterend','<section id="allSheetsQuick" class="all-sheets-quick"><div class="quick-head"><strong>Todas as fichas</strong><span>abrir para consultar ou treinar</span></div><div id="allSheetsQuickList" class="quick-sheet-list"></div></section>');
-  return $('allSheetsQuick');
-}
-function renderAllSheets(){
-  const wrap=ensureAllSheets(),list=$('allSheetsQuickList');if(!wrap||!list)return;
-  const ordered=[...sheets].sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
-  list.innerHTML=ordered.map(s=>{const tr=trainings.find(t=>t.id===s.training_id);return `<button class="quick-sheet" data-quick-sheet="${s.id}"><span><strong>${esc(s.name)}</strong><small>${sessionCountForSheet(s.id)} exercícios · ${esc(tr?.name||'')}</small></span><b>›</b></button>`}).join('')||'<span class="meta">Nenhuma ficha criada.</span>';
-  list.querySelectorAll('[data-quick-sheet]').forEach(btn=>btn.onclick=()=>{currentDate=key(new Date());currentSheet=sheets.find(s=>s.id===btn.dataset.quickSheet);openSession()});
-}
 
 renderWeek=function(){
   const {k,sh,tr,ses}=todayPlan(),hero=$('todayWorkout');
   if(hero){hero.innerHTML=sh?`<button class="today-workout ${ses?.completed?'completed':''}" data-today-session><span class="today-kicker">hoje ${ses?.completed?'· concluído ✓':''}</span><strong>${esc(sh.name)}</strong><span>${sessionCountForSheet(sh.id)} exercícios · ${esc(tr?.name||'')}</span><b>${ses?.completed?'ver treino':'abrir ficha'} →</b></button>`:`<button class="today-workout empty" data-today-plan><span class="today-kicker">hoje</span><strong>Sem treino planejado</strong><span>Escolha uma ficha para hoje</span><b>planejar →</b></button>`;hero.querySelector('[data-today-session]')?.addEventListener('click',()=>{currentDate=k;currentSheet=sh;openSession()});hero.querySelector('[data-today-plan]')?.addEventListener('click',()=>{currentDate=k;openPicker()})}
-  renderAllSheets();
   $('weekTitle').textContent=monthLabel(calendarMonth);
   const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth(),first=new Date(y,m,1,12),last=new Date(y,m+1,0,12),offset=(first.getDay()+6)%7,total=Math.ceil((offset+last.getDate())/7)*7,start=new Date(y,m,1-offset,12),today=key(new Date());
   let html='<div class="cal-weekdays">'+['seg','ter','qua','qui','sex','sáb','dom'].map(x=>`<span>${x}</span>`).join('')+'</div><div class="month-days">';
-  for(let i=0;i<total;i++){let d=new Date(start);d.setDate(start.getDate()+i);let dk=key(d),outside=d.getMonth()!==m,p=plans.find(x=>x.plan_date===dk),s=p&&sheets.find(x=>x.id===p.sheet_id),t=s&&trainings.find(x=>x.id===s.training_id),done=sessions.find(x=>x.session_date===dk)?.completed;html+=`<button class="month-day ${outside?'outside':''} ${dk===today?'today':''} ${done?'done':''}" data-day="${dk}"><span class="month-date">${d.getDate()}</span>${s?`<span class="month-sheet">${done?'✓ ':''}${esc(s.name)}</span><span class="month-training">${esc(t?.name||'')}</span>`:`<span class="month-rest">${outside?'':'+'}</span>`}</button>`}
+  for(let i=0;i<total;i++){let d=new Date(start);d.setDate(start.getDate()+i);let dk=key(d),outside=d.getMonth()!==m,p=plans.find(x=>x.plan_date===dk),s=p&&sheets.find(x=>x.id===p.sheet_id),t=s&&trainings.find(x=>x.id===s.training_id),done=sessions.find(x=>x.session_date===dk)?.completed;html+=`<button class="month-day ${outside?'outside':''} ${dk===today?'today':''} ${done?'done':''} ${s?'has-workout':''}" data-day="${dk}" aria-label="${s?`Abrir ${esc(s.name)}`:'Planejar treino'}"><span class="month-date">${d.getDate()}</span>${s?`<span class="month-sheet">${done?'✓ ':''}${esc(s.name)} <b>›</b></span><span class="month-training">${esc(t?.name||'')}</span>`:`<span class="month-rest">${outside?'':'+'}</span>`}</button>`}
   $('weekGrid').innerHTML=html+'</div>';$('weekGrid').querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>dayClick(b.dataset.day));
 }
 
