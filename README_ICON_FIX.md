@@ -1,0 +1,1 @@
+Do not remove standalone/PWA metadata. The iOS touch icon must be a valid RGB PNG.
