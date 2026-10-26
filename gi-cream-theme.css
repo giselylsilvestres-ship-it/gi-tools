@@ -1,0 +1,5 @@
+:root{--gi-cream:#f4efe5;--gi-cream-soft:#ebe4d8;--gi-cream-muted:#b8afa2}
+html[data-theme="light"]{--bg:var(--gi-cream)!important;--surface:var(--gi-cream)!important;--surface-2:var(--gi-cream-soft)!important;--surface2:var(--gi-cream-soft)!important;--border:#d8d0c3!important}
+html[data-theme="dark"]{--text:#eee7da!important;--muted:#a9a297!important;--border:#403b34!important;--accent-contrast:#eee7da!important;--contrast:#eee7da!important;--gi-nav-text:#eee7da!important;--gi-nav-muted:#a9a297!important;--gi-nav-border:#403b34!important}
+html[data-theme="dark"] .primary,html[data-theme="dark"] .send-button,html[data-theme="dark"] .avatar-edit-badge,html[data-theme="dark"] .gi-avatar-pencil,html[data-theme="dark"] .today-workout b,html[data-theme="dark"] .set-done .set-check{color:#eee7da!important}
+html[data-theme="dark"] svg[stroke="white"],html[data-theme="dark"] svg[stroke="#fff"],html[data-theme="dark"] svg[stroke="#ffffff"]{stroke:#eee7da!important}
