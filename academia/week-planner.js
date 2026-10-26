@@ -5,7 +5,6 @@
   const weekTitleLabel=(start,end)=>start.getMonth()===end.getMonth()
     ? `${start.getDate()} de ${cap(start.toLocaleDateString('pt-BR',{month:'long'}))} - ${end.getDate()} de ${cap(end.toLocaleDateString('pt-BR',{month:'long'}))}`
     : `${datePart(start)} - ${datePart(end)}`;
-  const monthTitleLabel=start=>`${cap(start.toLocaleDateString('pt-BR',{month:'long'}))} de ${start.getFullYear()}`;
 
   function sheetForPlannerDate(dk){
     const p=plans.find(x=>x.plan_date===dk),ses=sessions.find(x=>x.session_date===dk),sheetId=p?.sheet_id||ses?.sheet_id;
@@ -36,7 +35,7 @@
       const dk=key(d),p=plans.find(x=>x.plan_date===dk),ses=sessions.find(x=>x.session_date===dk),sh=sheetForPlannerDate(dk);
       if(!p&&!ses)continue;
       const tr=sh&&trainings.find(x=>x.id===sh.training_id),done=!!ses?.completed,sets=done?workoutSetsForSession(ses):0;
-      items.push(`<button class="week-summary-row" data-summary-day="${dk}"><span class="summary-date">${cap(d.toLocaleDateString('pt-BR',{weekday:'long'}))}, ${d.getDate()} de ${cap(d.toLocaleDateString('pt-BR',{month:'long'}))}</span><span class="summary-main"><strong>${esc(sh?.name||ses?.workout_data?.name||'Treino')}</strong><small>${esc(tr?.name||'')}</small></span><span class="summary-status ${done?'done':'planned'}">${done?`${sets} série${sets===1?'':'s'} · concluído`:'planejado'}</span></button>`);
+      items.push(`<button class="week-summary-row" data-summary-day="${dk}"><span class="summary-date">${cap(d.toLocaleDateString('pt-BR',{weekday:'long'}))}, ${d.getDate()} de ${cap(d.toLocaleDateString('pt-BR',{month:'long'}))}</span><span class="summary-main"><strong>${esc(sh?.name||ses?.workout_data?.name||'treino')}</strong><small>${esc((tr?.name||'').toLowerCase())}</small></span><span class="summary-status ${done?'done':'planned'}">${done?`${sets} série${sets===1?'':'s'} · concluído`:'planejado'}</span></button>`);
     }
     wrap.innerHTML=`<div class="week-summary-head"><strong>Treinos da semana</strong><small>${items.length?`${items.length} dia${items.length===1?'':'s'} com treino`:'Nenhum treino planejado'}</small></div>${items.length?`<div class="week-summary-list">${items.join('')}</div>`:'<div class="week-summary-empty">Planeje um treino tocando em uma das bolinhas acima.</div>'}`;
     wrap.querySelectorAll('[data-summary-day]').forEach(b=>b.onclick=()=>plannerDayClick(b.dataset.summaryDay));
@@ -46,10 +45,9 @@
     const end=new Date(weekStart);end.setDate(end.getDate()+6);
     const head=document.querySelector('.week-head');
     if(head){
-      head.innerHTML=`<div class="week-heading-copy"><small>${monthTitleLabel(weekStart)}</small><div class="week-range-line"><button id="prevWeekInline" class="week-inline-arrow" aria-label="Semana anterior">‹</button><h1 id="weekTitle">${weekTitleLabel(weekStart,end)}</h1><button id="nextWeekInline" class="week-inline-arrow" aria-label="Próxima semana">›</button></div></div><button id="todayWeekInline" class="week-today-inline">hoje</button>`;
+      head.innerHTML=`<div class="week-range-line"><button id="prevWeekInline" class="week-inline-arrow" aria-label="Semana anterior">‹</button><h1 id="weekTitle">${weekTitleLabel(weekStart,end)}</h1><button id="nextWeekInline" class="week-inline-arrow" aria-label="Próxima semana">›</button></div>`;
       $('prevWeekInline').onclick=()=>{weekStart.setDate(weekStart.getDate()-7);renderWeek()};
       $('nextWeekInline').onclick=()=>{weekStart.setDate(weekStart.getDate()+7);renderWeek()};
-      $('todayWeekInline').onclick=()=>{weekStart=startWeek(new Date());renderWeek()};
     }
     const oldNav=document.querySelector('.week-nav');if(oldNav)oldNav.style.display='none';
     const today=key(new Date());
@@ -89,15 +87,15 @@
     const available=trainings.filter(t=>sheets.some(s=>s.training_id===t.id));
     $('sheetOptions').innerHTML=available.length?available.map(t=>{
       const count=sheets.filter(s=>s.training_id===t.id).length;
-      return `<button class="option" data-training-pick="${t.id}"><strong>${esc(t.name)}</strong><small>${count} ficha${count===1?'':'s'} ›</small></button>`;
+      return `<button class="option" data-training-pick="${t.id}"><strong>${esc(t.name.toLowerCase())}</strong><small>${count} ficha${count===1?'':'s'} ›</small></button>`;
     }).join(''):'<div class="meta">Crie um Treino e pelo menos uma Ficha primeiro.</div>';
     $('sheetOptions').querySelectorAll('[data-training-pick]').forEach(b=>b.onclick=()=>showSheetStage(b.dataset.trainingPick));
   }
 
   function showSheetStage(trainingId){
-    const training=trainings.find(t=>t.id===trainingId),heading=document.querySelector('#sheetPicker .modal-head h2');if(heading)heading.textContent=training?.name||'Escolher ficha';
+    const training=trainings.find(t=>t.id===trainingId),heading=document.querySelector('#sheetPicker .modal-head h2');if(heading)heading.textContent=(training?.name||'Escolher ficha').toLowerCase();
     const options=sheets.filter(s=>s.training_id===trainingId).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
-    $('sheetOptions').innerHTML=`<button class="option picker-back" data-picker-back><strong>← Treinos</strong><small>voltar</small></button>`+(options.length?options.map(s=>`<button class="option" data-sheet-pick="${s.id}"><strong>${esc(s.name)}</strong><small>${s.routine_data?.exercises?.length??sheetLinks(s.id).length} exercícios</small></button>`).join(''):'<div class="meta">Esse treino ainda não tem fichas.</div>');
+    $('sheetOptions').innerHTML=`<button class="option picker-back" data-picker-back><strong>← treinos</strong><small>voltar</small></button>`+(options.length?options.map(s=>`<button class="option" data-sheet-pick="${s.id}"><strong>${esc(s.name)}</strong><small>${s.routine_data?.exercises?.length??sheetLinks(s.id).length} exercícios</small></button>`).join(''):'<div class="meta">Esse treino ainda não tem fichas.</div>');
     $('sheetOptions').querySelector('[data-picker-back]')?.addEventListener('click',showTrainingStage);
     $('sheetOptions').querySelectorAll('[data-sheet-pick]').forEach(b=>b.onclick=()=>chooseSheet(b.dataset.sheetPick));
   }
