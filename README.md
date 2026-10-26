@@ -1,5 +1,3 @@
 # gi-tools
 
-Meus mini apps e ferramentas pessoais.
-
-Deploy trigger: 2026-09-09
+Personal tools hub with Academia, Check-in diário and Escrita diária.
