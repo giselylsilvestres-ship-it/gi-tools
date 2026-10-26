@@ -82,14 +82,29 @@
     close('sheetPicker');await load();currentSheet=sheets.find(x=>x.id===sheetId);openSession();
   }
 
+  function startFreeForSelectedDate(){
+    const date=currentDate||key(new Date());
+    if(sessions.some(s=>s.session_date===date))return toast('Já existe um treino nesse dia. Abra o treino para adicionar exercícios.');
+    close('sheetPicker');
+    pickExercises(items=>{
+      if(!items?.length)return;
+      currentDate=date;currentSheet=null;workoutDate=date;
+      const w=Gym.start({version:3,name:'treino livre',exercises:items.map(e=>Gym.exercise({exerciseId:e.id,name:e.name,imageUrl:e.image_url}))});
+      try{localStorage.setItem(`gica-gym-v3:${user.id}:${date}`,JSON.stringify({workout:w,revision:0,sheetId:null,trainingId:null}))}catch{return toast('Sem espaço neste aparelho.')}
+      openSession();
+    });
+  }
+
   function showTrainingStage(){
     const heading=document.querySelector('#sheetPicker .modal-head h2');if(heading)heading.textContent='Escolher treino';
     const available=trainings.filter(t=>sheets.some(s=>s.training_id===t.id));
-    $('sheetOptions').innerHTML=available.length?available.map(t=>{
+    const trainingOptions=available.map(t=>{
       const count=sheets.filter(s=>s.training_id===t.id).length;
       return `<button class="option" data-training-pick="${t.id}"><strong>${esc(t.name.toLowerCase())}</strong><small>${count} ficha${count===1?'':'s'} ›</small></button>`;
-    }).join(''):'<div class="meta">Crie um Treino e pelo menos uma Ficha primeiro.</div>';
+    }).join('');
+    $('sheetOptions').innerHTML=trainingOptions+`<button class="option free-workout-option" data-free-workout><strong>treino livre</strong><small>escolher exercícios avulsos</small></button>`;
     $('sheetOptions').querySelectorAll('[data-training-pick]').forEach(b=>b.onclick=()=>showSheetStage(b.dataset.trainingPick));
+    $('sheetOptions').querySelector('[data-free-workout]')?.addEventListener('click',startFreeForSelectedDate);
   }
 
   function showSheetStage(trainingId){
