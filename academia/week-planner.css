@@ -1,12 +1,8 @@
 /* Weekly planner: compact Monday–Sunday status strip + weekly detail list. */
-.week-head{display:block!important;margin:34px 0 18px!important;text-align:center!important}
-.week-heading-copy{display:flex;flex-direction:column;align-items:center;gap:8px}
-.week-heading-copy>small{display:block!important;color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.02em}
-.week-range-line{display:flex;align-items:center;justify-content:center;gap:12px}
+.week-head{display:flex!important;align-items:center!important;justify-content:center!important;margin:30px 0 18px!important;text-align:center!important}
+.week-range-line{display:flex;align-items:center;justify-content:center;gap:12px;width:100%}
 .week-head h1{font-size:23px!important;letter-spacing:-.025em!important;margin:0!important;line-height:1.15}
-.week-inline-arrow,.week-today-inline{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;display:grid;place-items:center}
-.week-inline-arrow{width:36px;height:36px;padding:0;font-size:24px;line-height:1}
-.week-today-inline{margin:10px auto 0;height:30px;padding:0 12px;font-size:11px;color:var(--muted)}
+.week-inline-arrow{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;display:grid;place-items:center;width:36px;height:36px;padding:0;font-size:24px;line-height:1;flex:none}
 .week-nav{display:none!important}
 
 .week-grid.week-status-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;border:1px solid var(--border)!important;border-radius:20px!important;overflow:visible!important;background:var(--surface)!important;padding:20px 18px!important;gap:8px!important;align-items:start!important}
@@ -28,7 +24,7 @@
 .week-summary-row:hover{background:var(--surface2)}
 .summary-date{font-size:12px;color:var(--muted)}
 .summary-main{min-width:0}
-.summary-main strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.summary-main strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none}
 .summary-main small{display:block;margin-top:4px;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .summary-status{font-size:11px;font-weight:650;white-space:nowrap;padding:7px 10px;border-radius:999px;background:var(--surface2);color:var(--muted)}
 .summary-status.done{color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
@@ -41,7 +37,7 @@
 #sheetOptions .option small{display:block}
 
 @media(max-width:700px){
-  .week-head{margin-top:26px!important}.week-heading-copy>small{font-size:11px}.week-head h1{font-size:18px!important}.week-range-line{gap:8px}.week-inline-arrow{width:32px;height:32px;font-size:21px}.week-today-inline{display:none}
+  .week-head{margin-top:24px!important}.week-head h1{font-size:18px!important}.week-range-line{gap:8px}.week-inline-arrow{width:32px;height:32px;font-size:21px}
   .week-grid.week-status-grid{padding:16px 8px!important;gap:3px!important;border-radius:17px!important}
   .week-status-day{gap:7px!important}.week-status-day .week-dow{font-size:9px}.week-status-day .week-circle{width:40px;height:40px;font-size:14px}.week-status-day.done .week-circle{font-size:20px}
   .week-summary{margin-top:20px}.week-summary-head{align-items:flex-start;flex-direction:column;gap:3px}.week-summary-row{grid-template-columns:1fr auto;gap:7px 10px;padding:14px}.summary-date{grid-column:1/-1}.summary-main strong{font-size:14px}.summary-status{font-size:10px;padding:6px 8px}
