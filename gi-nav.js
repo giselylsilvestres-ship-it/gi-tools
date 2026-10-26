@@ -12,8 +12,47 @@ document.body.appendChild(nav);document.body.classList.add('gi-has-nav');
 const collapse=nav.querySelector('.gi-collapse');if(localStorage.getItem('gi-nav-collapsed')==='1'){nav.classList.add('collapsed');document.body.classList.add('gi-nav-collapsed')}collapse.onclick=()=>{nav.classList.toggle('collapsed');document.body.classList.toggle('gi-nav-collapsed',nav.classList.contains('collapsed'));localStorage.setItem('gi-nav-collapsed',nav.classList.contains('collapsed')?'1':'0')};
 if(!window.supabase||!window.GI_SUPABASE_URL)return;
 const c=supabase.createClient(window.GI_SUPABASE_URL,window.GI_SUPABASE_KEY),avatarBtn=nav.querySelector('.gi-avatar-edit'),avatarImg=avatarBtn.querySelector('img'),accountPop=nav.querySelector('.gi-account-pop');
-function paintAvatar(url){if(url){avatarImg.src=url;avatarBtn.classList.add('has-avatar')}else{avatarImg.removeAttribute('src');avatarBtn.classList.remove('has-avatar')}const cal=document.getElementById('calendarAvatar');if(cal&&url)cal.src=url}
-async function currentAvatar(){const{data:{user}}=await c.auth.getUser();paintAvatar(user?.user_metadata?.avatar_url||'');return user}currentAvatar();window.GI_REFRESH_AVATAR=currentAvatar;
+let avatarRequest=0;
+function paintAvatar(url){
+  const request=++avatarRequest;
+  const fallback=window.GI_AVATAR||'';
+  const candidate=url||fallback;
+  avatarBtn.classList.remove('has-avatar');
+  avatarImg.removeAttribute('src');
+  avatarImg.onload=null;
+  avatarImg.onerror=null;
+  if(!candidate)return;
+  const apply=src=>{
+    if(request!==avatarRequest)return;
+    avatarImg.onload=()=>{
+      if(request!==avatarRequest)return;
+      avatarBtn.classList.add('has-avatar');
+      const cal=document.getElementById('calendarAvatar');if(cal)cal.src=avatarImg.src;
+    };
+    avatarImg.onerror=()=>{
+      if(request!==avatarRequest)return;
+      if(fallback&&src!==fallback){apply(fallback);return}
+      avatarImg.removeAttribute('src');
+      avatarBtn.classList.remove('has-avatar');
+      const cal=document.getElementById('calendarAvatar');if(cal)cal.removeAttribute('src');
+    };
+    avatarImg.src=src;
+    if(avatarImg.complete&&avatarImg.naturalWidth>0)avatarImg.onload();
+  };
+  apply(candidate);
+}
+async function currentAvatar(){
+  try{
+    const{data:{user}}=await c.auth.getUser();
+    paintAvatar(user?.user_metadata?.avatar_url||window.GI_AVATAR||'');
+    return user;
+  }catch(error){
+    console.warn('Não consegui atualizar o avatar.',error);
+    paintAvatar(window.GI_AVATAR||'');
+    return null;
+  }
+}
+currentAvatar();window.GI_REFRESH_AVATAR=currentAvatar;
 window.GI_EDIT_AVATAR=()=>{const input=document.createElement('input');input.type='file';input.accept='image/*';input.style.position='fixed';input.style.left='-9999px';document.body.appendChild(input);input.onchange=async()=>{const file=input.files?.[0];if(!file){input.remove();return}const{data:{user}}=await c.auth.getUser();if(!user){location.replace('/login.html');return}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const size=Math.min(img.naturalWidth,img.naturalHeight),sx=(img.naturalWidth-size)/2,sy=(img.naturalHeight-size)/2,canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;canvas.getContext('2d').drawImage(img,sx,sy,size,size,0,0,512,512);canvas.toBlob(async blob=>{const filePath=`${user.id}/${Date.now()}.jpg`,up=await c.storage.from('avatars').upload(filePath,blob,{contentType:'image/jpeg'});if(up.error){alert('Não consegui salvar a foto.');input.remove();return}const url=c.storage.from('avatars').getPublicUrl(filePath).data.publicUrl;await c.auth.updateUser({data:{avatar_url:url}});paintAvatar(url);window.dispatchEvent(new CustomEvent('gi-avatar-updated',{detail:{url}}));input.remove()},'image/jpeg',.88)};img.src=String(reader.result)};reader.readAsDataURL(file)};input.click()};
 const logout=async()=>{await c.auth.signOut();location.replace('/login.html')};nav.querySelector('.gi-logout').onclick=logout;nav.querySelector('.gi-pop-logout').onclick=logout;nav.querySelector('.gi-edit-photo').onclick=()=>{accountPop.classList.remove('open');window.GI_EDIT_AVATAR()};avatarBtn.onclick=()=>{if(matchMedia('(max-width:760px)').matches)accountPop.classList.toggle('open');else window.GI_EDIT_AVATAR()};document.addEventListener('click',e=>{if(!nav.querySelector('.gi-nav-footer').contains(e.target))accountPop.classList.remove('open')});
 })();
