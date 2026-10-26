@@ -8,13 +8,13 @@
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "/apple-touch-icon-gica-20261026.png",
+      "src": "/api/apple-touch-icon-rgb.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/api/icon-512-rgb.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
