@@ -8,7 +8,7 @@
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
-    {"src":"/apple-touch-icon-gica-20261026.png","sizes":"180x180","type":"image/png","purpose":"any"},
-    {"src":"/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"}
+    {"src":"/api/apple-touch-icon-rgb.png","sizes":"180x180","type":"image/png","purpose":"any"},
+    {"src":"/api/icon-512-rgb.png","sizes":"512x512","type":"image/png","purpose":"any"}
   ]
 }
