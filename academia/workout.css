@@ -4,3 +4,9 @@
 .demo-banner{padding:10px 16px;background:var(--accent-wash);color:var(--accent);text-align:center;font-size:10px;letter-spacing:.4px}.demo-banner button{font:inherit;margin-left:10px;border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer}
 
 @media(max-width:560px){.metric-grid{display:grid;grid-template-columns:repeat(2,1fr)}.metric{min-height:90px}.metric strong{font-size:23px}.metric span{font-size:11px}.metric small{font-size:10px}}
+
+/* Avoid iOS focus/double-tap zoom while retaining pinch-to-zoom accessibility. */
+button,input,select,textarea,a{touch-action:manipulation}
+@media(hover:none),(pointer:coarse){
+  .set-line input,.field input,.field select,.field textarea,.routine-settings input,.routine-settings select,.routine-set input,.routine-set select,.routine-name,.search{font-size:16px!important}
+}

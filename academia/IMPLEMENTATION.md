@@ -17,7 +17,7 @@ A local checkpoint is written on every edit. Failed network writes remain visibl
 
 ## Validation
 
-- `node --test academia/tests/core.test.cjs`: seven unit tests covering drop chains, unequal supersets, zero load, previous-load reuse, legacy preservation and orphan groups.
+- `node --test academia/tests/core.test.cjs`: twelve unit tests covering drop chains, unequal supersets, optional load/reps, safe propagation, previous-load reuse, legacy preservation and orphan groups.
 - `node academia/tests/browser.cjs`: a self-contained local static server + Playwright flow; optional `GYM_CHROMIUM` executable path. Covers mobile/tablet layout, rest behavior, independent drop round trip, failed sync/retry, cross-device conflict resolution, partial completion, routine edits/duplication, and history. Browser demo uses an isolated adapter; it does not assert authenticated live Supabase requests.
 - Live database transaction, rolled back: snapshot round trip, revisions, stale-write rejection, RLS isolation and foreign-sheet rejection.
 - Supabase security advisors: no new database findings. Existing leaked-password protection warning is unrelated to this feature.
@@ -25,3 +25,7 @@ A local checkpoint is written on every edit. Failed network writes remain visibl
 ## Release
 
 Release is authorized after review of the interactive demo. Deployments must retain Supabase authentication and existing RLS; the demo route remains isolated from real account data. Validate the deployed demo and unauthenticated redirect before completing the release.
+
+## Input refinements
+
+Loads and reps are optional when completing a series. Missing measurements stay null in saved history and do not invent volume or zero-load progression. Historical defaults search past blank records, including legacy aggregates. A manually entered load propagates to later unfinished series unless the user already edited their loads; each drop stage and warm-up remain independent. Touch inputs use at least 16px and touch-action manipulation to avoid focus/double-tap zoom while preserving pinch zoom. Enter completes the current series.

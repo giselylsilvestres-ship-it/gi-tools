@@ -6,6 +6,15 @@ const timeLabel=seconds=>`${Math.floor(Math.max(0,seconds)/60)}:${String(Math.fl
 const numericLabel=n=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(n);
 const draftKey=()=>`gica-gym-v3:${user.id}:${workoutDate}`;
 const historyWorkouts=()=>sessions.filter(s=>s.workout_data?.version===3).map(s=>({...s.workout_data,date:s.session_date})).sort((a,b)=>b.date.localeCompare(a.date));
+// Old summaries provide defaults, without fabricating historical individual sets.
+const prefillHistory=()=>sessions.slice().sort((a,b)=>b.session_date.localeCompare(a.session_date)).filter(s=>s.session_date<workoutDate).map(s=>{
+  if(s.workout_data?.version===3)return s.workout_data;
+  return {exercises:logs.filter(l=>l.session_id===s.id).map(l=>{
+    const link=links.find(x=>x.id===l.exercise_id||x.exercise_id===l.exercise_id);
+    return {exerciseId:link?.exercise_id||l.exercise_id,sets:[Gym.set({weight:Gym.number(l.weight),reps:/^\d+$/.test(l.reps||'')?Number(l.reps):null})]};
+  })};
+});
+const recordedStepLabel=step=>`${step.weight==null?'—':numericLabel(step.weight)} × ${step.reps??'—'}`;
 function toast(message){let el=$('gymToast');el.textContent=message;el.hidden=false;clearTimeout(el.hideTimer);el.hideTimer=setTimeout(()=>el.hidden=true,4500)}
 function showLoadError(error){console.error(error);let box=$('gymLoadError');if(!box){box=document.createElement('div');box.id='gymLoadError';box.className='load-error';document.querySelector('.app').prepend(box)}box.innerHTML='<strong>Não consegui carregar seus treinos.</strong><p>Seus dados continuam guardados. Tente novamente quando a conexão voltar.</p><button class="soft" id="retryGymLoad">Tentar novamente</button>';$('retryGymLoad').onclick=()=>location.reload()}
 function keepDraft(){if(!activeWorkout)return;try{localStorage.setItem(draftKey(),JSON.stringify({workout:activeWorkout,revision:activeRevision,sheetId:workoutSheet,trainingId:workoutTraining,savedAt:Date.now()}));return true}catch{setSaveState('Sem espaço para guardar neste aparelho. Salve antes de sair.','error');return false}}
@@ -38,12 +47,13 @@ openSession=function(){
   workoutDate=currentDate;let server=sessions.find(s=>s.session_date===currentDate);const selected=chooseDraft(server);workoutSheet=selected?.sheet_id??currentSheet?.id??null;workoutTraining=selected?.training_id??currentSheet?.training_id??null;activeRevision=selected?.revision||0;workoutConflict=false;
   if(selected?.workout_data)activeWorkout=clone(selected.workout_data);
   else if(server&&logs.some(l=>l.session_id===server.id))activeWorkout={version:3,name:currentSheet?.name||'Treino anterior',status:'legacy',notes:server.notes||'',exercises:Gym.fromLegacy(logs.filter(l=>l.session_id===server.id),links,catalog)};
-  else {if(!currentSheet){toast('Esta ficha não está mais disponível.');return}activeWorkout=Gym.start(routineFor(currentSheet),historyWorkouts().filter(w=>w.date<workoutDate));if(!activeWorkout.exercises.length){toast('Adicione exercícios à ficha antes de começar.');openSheet(currentSheet.id);return}}
+  else {if(!currentSheet){toast('Esta ficha não está mais disponível.');return}activeWorkout=Gym.start(routineFor(currentSheet),prefillHistory());if(!activeWorkout.exercises.length){toast('Adicione exercícios à ficha antes de começar.');openSheet(currentSheet.id);return}}
+  if(activeWorkout.status==='active')Gym.prefill(activeWorkout,prefillHistory());
   $('sessionDate').textContent=new Date(workoutDate+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});$('sessionTitle').textContent=activeWorkout.name;$('sessionNotes').value=activeWorkout.notes||'';
   $('sessionNotes').disabled=activeWorkout.status!=='active';$('sessionNotes').oninput=()=>{activeWorkout.notes=$('sessionNotes').value;changed()};
   renderWorkout();setSaveState(activeWorkout.status==='legacy'?'Registro antigo · preservado':window.GYM_DEMO?'Prévia · salva só neste navegador':'Alterações salvas automaticamente');open('sessionModal');if(activeWorkout.status==='active')changed();
 };
-function previousSet(e,index,drop){for(const w of historyWorkouts().filter(w=>w.date<workoutDate)){const prev=w.exercises.find(x=>x.exerciseId&&x.exerciseId===e.exerciseId);const s=prev?.sets[index];const p=drop===null?s:s?.drops[drop];if(p?.done)return `${numericLabel(p.weight)} × ${p.reps}`}return '—'}
+function previousSet(e,index,drop){for(const w of historyWorkouts().filter(w=>w.date<workoutDate)){const prev=w.exercises.find(x=>x.exerciseId&&x.exerciseId===e.exerciseId);const s=prev?.sets[index];const p=drop===null?s:s?.drops[drop];if(p?.done)return recordedStepLabel(p)}return '—'}
 function inputRow(e,s,index,step,drop,readonly){const done=step.done,label=drop===null?String(index+1):`D${drop+1}`;return `<div class="set-line ${done?'set-done':''} ${drop!==null?'drop-line':''}" data-set="${s.id}" data-drop="${drop??''}"><span class="set-index">${label}</span><span class="set-previous">${previousSet(e,index,drop)}</span><input aria-label="Carga ${esc(e.name)}, série ${label}" inputmode="decimal" type="number" min="0" max="10000" step="0.5" data-field="weight" value="${step.weight??''}" placeholder="—" ${readonly||done?'disabled':''}><input aria-label="Repetições ${esc(e.name)}, série ${label}" inputmode="numeric" type="number" min="1" max="1000" step="1" data-field="reps" value="${step.reps??''}" placeholder="${esc(s.targetReps||'10')}" ${readonly||done?'disabled':''}><button type="button" class="set-check" data-action="check" aria-label="${done?'Desmarcar':'Concluir'} ${esc(e.name)}, série ${label}" aria-pressed="${done}" ${readonly?'disabled':''}>${done?'✓':'○'}</button></div>`}
 function renderWorkout(){
   const w=activeWorkout;if(!w)return;const readonly=w.status!=='active',st=Gym.stats(w),groups=[...new Set(w.exercises.map(e=>e.supersetId).filter(Boolean))];
@@ -52,19 +62,29 @@ function renderWorkout(){
   }).join('')+(!readonly?'<button class="soft wide" id="addWorkoutExercise">+ Adicionar exercício ao treino</button>':'');
   $('sessionExercises').querySelectorAll('[data-lift]').forEach(card=>{
     const e=w.exercises.find(e=>e.id===card.dataset.lift);
-    card.querySelectorAll('input[data-field]').forEach(input=>input.oninput=()=>{const row=input.closest('.set-line'),s=e.sets.find(s=>s.id===row.dataset.set),step=row.dataset.drop===''?s:s.drops[Number(row.dataset.drop)];step[input.dataset.field]=Gym.number(input.value);changed();});
+    card.querySelectorAll('input[data-field]').forEach(input=>{
+      input.oninput=()=>{
+        const row=input.closest('.set-line'),s=e.sets.find(s=>s.id===row.dataset.set),drop=row.dataset.drop===''?null:Number(row.dataset.drop),step=drop===null?s:s.drops[drop],field=input.dataset.field;
+        if(field==='weight'){
+          Gym.setWeight(e,e.sets.indexOf(s),drop,Gym.number(input.value));
+          card.querySelectorAll('[data-field=weight]').forEach(other=>{if(other===input)return;const r=other.closest('.set-line'),set=e.sets.find(x=>x.id===r.dataset.set),value=r.dataset.drop===''?set:set.drops[Number(r.dataset.drop)];other.value=value.weight??''});
+        }else{step[field]=Gym.number(input.value);step[field+'Edited']=true}
+        changed();
+      };
+      input.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();input.blur();input.closest('.set-line').querySelector('.set-check').click()}};
+    });
     card.querySelectorAll('[data-action]').forEach(btn=>btn.onclick=()=>workoutAction(btn.dataset.action,e,btn));
   });
-  $('addWorkoutExercise')?.addEventListener('click',()=>pickExercises(items=>{items.forEach(e=>w.exercises.push(Gym.exercise({exerciseId:e.id,name:e.name,imageUrl:e.image_url})));changed(true)}));
+  $('addWorkoutExercise')?.addEventListener('click',()=>pickExercises(items=>{items.forEach(e=>w.exercises.push(Gym.exercise({exerciseId:e.id,name:e.name,imageUrl:e.image_url})));Gym.prefill(w,prefillHistory());changed(true)}));
   $('saveSession').textContent=w.status==='finished'?'Editar registro':w.status==='legacy'?'Fechar histórico':'Concluir treino';
   $('saveSession').onclick=finishWorkout;$('sessionNotes').disabled=readonly;tickWorkout();
 }
 function workoutAction(action,e,btn){
   if(activeWorkout.status!=='active')return;let s=e.sets.find(s=>s.id===(btn.dataset.set||btn.closest('.set-line')?.dataset.set));
   if(action==='check'){
-    const row=btn.closest('.set-line'),step=row.dataset.drop===''?s:s.drops[Number(row.dataset.drop)];if(!step.done&&!Gym.valid(step)){toast('Preencha kg e repetições. Use 0 kg para peso corporal.');return}step.done=!step.done;
+    const row=btn.closest('.set-line'),step=row.dataset.drop===''?s:s.drops[Number(row.dataset.drop)];if(!step.done&&!Gym.valid(step)){toast('Confira a carga e as repetições, ou deixe em branco.');return}document.activeElement?.blur();step.done=!step.done;
     activeWorkout.restEnd=null;
-    if(step.done&&Gym.done(s)){const next=Gym.next(activeWorkout,e.id,e.sets.indexOf(s));if(next.rest&&next.seconds>0){activeWorkout.restEnd=Date.now()+next.seconds*1000;activeWorkout.restSeconds=next.seconds}if(next.exerciseId)setTimeout(()=>$('lift-'+next.exerciseId)?.scrollIntoView({behavior:'smooth',block:'start'}),70)}
+    if(step.done&&Gym.done(s)){const next=Gym.next(activeWorkout,e.id,e.sets.indexOf(s));if(next.rest&&next.seconds>0){activeWorkout.restEnd=Date.now()+next.seconds*1000;activeWorkout.restSeconds=next.seconds}if(next.exerciseId&&next.exerciseId!==e.id)setTimeout(()=>$('lift-'+next.exerciseId)?.scrollIntoView({behavior:'smooth',block:'start'}),70)}
     changed(true);return
   }
   if(action==='add-set'){if(e.sets.length>=30)return toast('Máximo de 30 séries por exercício.');const prev=e.sets.at(-1);e.sets.push(Gym.set({weight:prev?.weight??null,reps:prev?.reps??null,targetReps:prev?.targetReps||'10'}));changed(true)}
@@ -103,9 +123,9 @@ async function saveRoutine(duplicate=false){
 function renderHistory(){const el=$('historyList');if(!el)return;el.innerHTML=sessions.slice().sort((a,b)=>b.session_date.localeCompare(a.session_date)).map(s=>{const w=s.workout_data,sh=sheets.find(x=>x.id===s.sheet_id),st=w?Gym.stats(w):null;return `<button class="history-card" data-history="${s.id}"><span class="history-date">${new Date(s.session_date+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</span><span><b>${esc(w?.name||sh?.name||'Treino anterior')}</b><small>${s.completed?'Concluído':'Em andamento'}${st?` · ${st.done} séries · ${numericLabel(st.volume)} kg`:''}</small></span><span>↗</span></button>`}).join('')||'<div class="routine-empty">Seu histórico vai aparecer aqui.<br>Cada série conta.</div>';el.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>{const s=sessions.find(s=>s.id===b.dataset.history);currentDate=s.session_date;currentSheet=sheets.find(sh=>sh.id===s.sheet_id)||null;openSession()})}
 const legacyStats=exerciseStats;
 exerciseStats=function(id){const weights=historyWorkouts().flatMap(w=>w.exercises.filter(e=>e.exerciseId===id).flatMap(e=>e.sets.flatMap(s=>s.type==='warmup'?[]:Gym.steps(s).filter(x=>x.done&&x.weight!=null).map(x=>x.weight))));if(!weights.length)return legacyStats(id);return {best:Math.max(...weights),last:weights[0],avg:weights.reduce((a,b)=>a+b,0)/weights.length}};
-progression=function(){const hist=historyWorkouts().filter(w=>w.status==='finished'),by={};hist.forEach(w=>w.exercises.forEach(e=>{if(!e.exerciseId)return;const weights=e.sets.filter(s=>s.type!=='warmup').flatMap(s=>Gym.steps(s)).filter(s=>s.done).map(s=>s.weight);if(weights.length)(by[e.exerciseId]??=[]).push(Math.max(...weights))}));return {total:Object.values(by).filter(x=>x.length>1).length,up:Object.values(by).filter(x=>x.length>1&&x[0]>x[1]).length}};
+progression=function(){const hist=historyWorkouts().filter(w=>w.status==='finished'),by={};hist.forEach(w=>w.exercises.forEach(e=>{if(!e.exerciseId)return;const weights=e.sets.filter(s=>s.type!=='warmup').flatMap(s=>Gym.steps(s)).filter(s=>s.done&&s.weight!=null).map(s=>s.weight);if(weights.length)(by[e.exerciseId]??=[]).push(Math.max(...weights))}));return {total:Object.values(by).filter(x=>x.length>1).length,up:Object.values(by).filter(x=>x.length>1&&x[0]>x[1]).length}};
 const originalDetail=openExerciseDetail;
-openExerciseDetail=function(id){originalDetail(id);let history=$('exerciseSetHistory');if(!history){history=document.createElement('section');history.id='exerciseSetHistory';$('exerciseDetailNotes').after(history)}const rows=historyWorkouts().flatMap(w=>w.exercises.filter(e=>e.exerciseId===id).map(e=>({date:w.date,sets:e.sets}))).filter(r=>r.sets.some(s=>Gym.steps(s).some(x=>x.done)));history.innerHTML='<h3>Evolução por treino</h3>'+ (rows.length?rows.slice(0,12).map(r=>`<div class="exercise-history-row"><small>${new Date(r.date+'T12:00').toLocaleDateString('pt-BR')}</small><span>${r.sets.map(s=>Gym.steps(s).filter(x=>x.done).map(x=>`${numericLabel(x.weight)} kg × ${x.reps}`).join(' → ')).filter(Boolean).join(' · ')}</span></div>`).join(''):'<p class="meta">Registre suas séries para acompanhar a evolução aqui.</p>')};
+openExerciseDetail=function(id){originalDetail(id);let history=$('exerciseSetHistory');if(!history){history=document.createElement('section');history.id='exerciseSetHistory';$('exerciseDetailNotes').after(history)}const rows=historyWorkouts().flatMap(w=>w.exercises.filter(e=>e.exerciseId===id).map(e=>({date:w.date,sets:e.sets}))).filter(r=>r.sets.some(s=>Gym.steps(s).some(x=>x.done)));history.innerHTML='<h3>Evolução por treino</h3>'+ (rows.length?rows.slice(0,12).map(r=>`<div class="exercise-history-row"><small>${new Date(r.date+'T12:00').toLocaleDateString('pt-BR')}</small><span>${r.sets.map(s=>Gym.steps(s).filter(x=>x.done).map(x=>`${x.weight==null?'—':numericLabel(x.weight)} kg × ${x.reps??'—'}`).join(' → ')).filter(Boolean).join(' · ')}</span></div>`).join(''):'<p class="meta">Registre suas séries para acompanhar a evolução aqui.</p>')};
 function startFreeWorkout(){const date=key(new Date());if(sessions.some(s=>s.session_date===date))return toast('Você já tem um treino hoje. Abra o treino para adicionar exercícios.');pickExercises(items=>{currentDate=date;currentSheet=null;workoutDate=date;const w=Gym.start({version:3,name:'Treino livre',exercises:items.map(e=>Gym.exercise({exerciseId:e.id,name:e.name,imageUrl:e.image_url}))});try{localStorage.setItem(`gica-gym-v3:${user.id}:${date}`,JSON.stringify({workout:w,revision:0,sheetId:null,trainingId:null}))}catch{return toast('Sem espaço neste aparelho.')}openSession()})}
 function setupWorkoutUI(){
   const metrics=document.querySelector('#week .metric-grid');metrics.insertAdjacentHTML('beforebegin','<div class="gym-intro"><div><small>UM TREINO DE CADA VEZ</small><h1>Seu ritmo. Sua evolução.</h1></div><button class="soft" id="startFreeWorkout">+ Treino livre</button></div><div id="todayWorkout" class="today-workout-wrap"></div>');
