@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/apple-touch-icon.png", "destination": "/api/apple-touch-icon-orange-v3.png" },
+    { "source": "/apple-touch-icon-v3.png", "destination": "/api/apple-touch-icon-orange-v3.png" },
+    { "source": "/apple-touch-icon-gica-20261026.png", "destination": "/api/apple-touch-icon-orange-v3.png" },
+    { "source": "/icon-512.png", "destination": "/api/apple-touch-icon-orange-v3.png" },
+    { "source": "/api/apple-touch-icon-v4.png", "destination": "/api/apple-touch-icon-orange-v3.png" }
+  ]
+}
