@@ -1,1 +1,0 @@
-RGB 180x180 touch icon verified locally: PNG, mode RGB, 180x180, no alpha.
