@@ -1,8 +1,13 @@
-/* Completed-session actions + sticky workout summary. */
+/* Completed-session actions + compact sticky workout summary. */
 .session-head-actions{display:flex;align-items:center;gap:5px;margin-left:auto}.session-head-actions .close{margin-left:2px}.session-record-action[hidden]{display:none!important}
-.session-save-exit{width:44px!important;height:44px!important;min-width:44px!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center!important;margin-right:auto}.session-save-exit span{font-size:22px;line-height:1;transform:translateY(-1px)}
-/* Keep title + live stats visible while the exercise list scrolls. */
-.workout-session .modal-head{position:sticky;top:-24px;z-index:8;background:var(--surface);padding:12px 0 8px;margin-bottom:0}
-#sessionExercises>.workout-dashboard{position:sticky;top:55px;z-index:7;background:var(--surface);margin:0;padding:12px 0 10px}
-#sessionExercises>.progress-track{position:sticky;top:139px;z-index:7;background:var(--surface);margin:0 0 20px;padding-bottom:10px}
-@media(max-width:600px){.workout-session .modal-head{top:-18px}.session-head-actions{gap:2px}#sessionExercises>.workout-dashboard{top:51px;padding-top:10px}#sessionExercises>.progress-track{top:129px}.session-save-exit{width:42px!important;height:42px!important;min-width:42px!important}}
+/* The modal card is the scroll container. Keep the summary flush to its top instead of
+   using negative offsets, which exposed the surface as a large blank panel on iOS. */
+.workout-session .modal-head{position:sticky;top:0;z-index:9;background:var(--surface);padding:0 0 7px;margin:0}
+#sessionExercises>.workout-dashboard{position:sticky;top:62px;z-index:8;background:var(--surface);margin:0;padding:7px 0 8px}
+#sessionExercises>.progress-track{position:sticky;top:129px;z-index:8;background:var(--surface);margin:0 0 14px;padding:0 0 7px}
+@media(max-width:600px){
+  .session-head-actions{gap:2px}
+  .workout-session .modal-head{top:0;padding:0 0 6px}
+  #sessionExercises>.workout-dashboard{top:55px;padding:6px 0 7px}
+  #sessionExercises>.progress-track{top:116px;padding-bottom:6px;margin-bottom:12px}
+}
