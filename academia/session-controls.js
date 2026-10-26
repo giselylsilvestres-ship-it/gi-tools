@@ -8,30 +8,19 @@
   const actions=document.createElement('div');
   actions.className='session-head-actions';
   actions.innerHTML=`
-    <button id="editWorkoutRecord" class="icon-btn session-record-action" aria-label="Editar registro" title="Editar registro" hidden>✎</button>
     <button id="deleteWorkoutRecord" class="icon-btn danger-icon session-record-action" aria-label="Excluir treino realizado" title="Excluir treino realizado" hidden>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>`;
   head.appendChild(actions);
   if(closeBtn)actions.appendChild(closeBtn);
 
-  const editBtn=document.getElementById('editWorkoutRecord');
   const deleteBtn=document.getElementById('deleteWorkoutRecord');
   const originalRender=window.renderWorkout;
   window.renderWorkout=function(){
     const result=originalRender.apply(this,arguments);
     const recorded=!!sessions.find(s=>s.session_date===workoutDate);
-    const finished=activeWorkout?.status==='finished';
-    editBtn.hidden=!finished;
     deleteBtn.hidden=!recorded;
     return result;
-  };
-
-  editBtn.onclick=()=>{
-    if(activeWorkout?.status!=='finished')return;
-    activeWorkout.status='active';
-    activeWorkout.editingFinished=true;
-    changed(true);
   };
 
   deleteBtn.onclick=async()=>{
@@ -59,7 +48,7 @@
     }finally{deleteBtn.disabled=false}
   };
 
-  // Match the compact send control used by Escrita diária: save-and-exit becomes a round arrow button.
+  // Concluir treino / Editar registro already covers the save/edit flow; no redundant secondary action.
   const saveExit=document.getElementById('unplan');
-  if(saveExit){saveExit.classList.add('session-save-exit');saveExit.innerHTML='<span aria-hidden="true">↑</span>';saveExit.setAttribute('aria-label','Salvar e sair');saveExit.title='Salvar e sair'}
+  if(saveExit)saveExit.hidden=true;
 })();
