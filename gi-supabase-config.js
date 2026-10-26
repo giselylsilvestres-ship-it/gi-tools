@@ -2,7 +2,7 @@ window.GI_SUPABASE_URL='https://huiuuhzsfmfptifxievv.supabase.co';
 window.GI_SUPABASE_KEY='sb_publishable_yyxXVmNC6Wb42KMT5eTjrQ_3C6trYzw';
 
 (() => {
-  const iconHref = '/api/apple-touch-icon-orange-v3.png';
+  const iconHref = '/gica-icon-black-cream-v1.png';
   const manifestHref = '/manifest-orange-v3.webmanifest';
   const tags = [
     `<link rel="manifest" href="${manifestHref}">`,
