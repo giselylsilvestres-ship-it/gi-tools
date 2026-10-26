@@ -5,16 +5,53 @@
   const weekTitleLabel=(start,end)=>start.getMonth()===end.getMonth()
     ? `${start.getDate()} de ${cap(start.toLocaleDateString('pt-BR',{month:'long'}))} - ${end.getDate()} de ${cap(end.toLocaleDateString('pt-BR',{month:'long'}))}`
     : `${datePart(start)} - ${datePart(end)}`;
+  const monthTitleLabel=start=>`${cap(start.toLocaleDateString('pt-BR',{month:'long'}))} de ${start.getFullYear()}`;
 
   function sheetForPlannerDate(dk){
     const p=plans.find(x=>x.plan_date===dk),ses=sessions.find(x=>x.session_date===dk),sheetId=p?.sheet_id||ses?.sheet_id;
     return (sheetId?sheets.find(x=>x.id===sheetId):null)||(ses?.workout_data?{id:ses.sheet_id,name:ses.workout_data.name,training_id:ses.training_id}:null);
   }
 
+  function workoutSetsForSession(ses){
+    if(!ses)return 0;
+    if(ses.workout_data?.version===3){
+      return (ses.workout_data.exercises||[]).reduce((sum,e)=>sum+(e.sets||[]).reduce((n,s)=>n+(s.done?1:0)+(s.drops||[]).filter(d=>d.done).length,0),0);
+    }
+    return logs.filter(l=>l.session_id===ses.id&&l.completed).length;
+  }
+
+  function ensureWeekSummary(){
+    let wrap=document.getElementById('weekSummary');
+    if(wrap)return wrap;
+    wrap=document.createElement('section');wrap.id='weekSummary';wrap.className='week-summary';
+    $('weekGrid').insertAdjacentElement('afterend',wrap);
+    return wrap;
+  }
+
+  function renderWeekSummary(){
+    const wrap=ensureWeekSummary();
+    let items=[];
+    for(let i=0;i<7;i++){
+      const d=new Date(weekStart);d.setDate(d.getDate()+i);
+      const dk=key(d),p=plans.find(x=>x.plan_date===dk),ses=sessions.find(x=>x.session_date===dk),sh=sheetForPlannerDate(dk);
+      if(!p&&!ses)continue;
+      const tr=sh&&trainings.find(x=>x.id===sh.training_id),done=!!ses?.completed,sets=done?workoutSetsForSession(ses):0;
+      items.push(`<button class="week-summary-row" data-summary-day="${dk}"><span class="summary-date">${cap(d.toLocaleDateString('pt-BR',{weekday:'long'}))}, ${d.getDate()} de ${cap(d.toLocaleDateString('pt-BR',{month:'long'}))}</span><span class="summary-main"><strong>${esc(sh?.name||ses?.workout_data?.name||'Treino')}</strong><small>${esc(tr?.name||'')}</small></span><span class="summary-status ${done?'done':'planned'}">${done?`${sets} série${sets===1?'':'s'} · concluído`:'planejado'}</span></button>`);
+    }
+    wrap.innerHTML=`<div class="week-summary-head"><strong>Treinos da semana</strong><small>${items.length?`${items.length} dia${items.length===1?'':'s'} com treino`:'Nenhum treino planejado'}</small></div>${items.length?`<div class="week-summary-list">${items.join('')}</div>`:'<div class="week-summary-empty">Planeje um treino tocando em uma das bolinhas acima.</div>'}`;
+    wrap.querySelectorAll('[data-summary-day]').forEach(b=>b.onclick=()=>plannerDayClick(b.dataset.summaryDay));
+  }
+
   renderWeek=function(){
     const end=new Date(weekStart);end.setDate(end.getDate()+6);
-    $('weekTitle').textContent=weekTitleLabel(weekStart,end);
-    const nav=document.querySelector('.week-nav');if(nav)nav.style.display='flex';
+    const head=document.querySelector('.week-head');
+    if(head){
+      head.innerHTML=`<div class="week-heading-copy"><small>${monthTitleLabel(weekStart)}</small><div class="week-range-line"><button id="prevWeekInline" class="week-inline-arrow" aria-label="Semana anterior">‹</button><h1 id="weekTitle">${weekTitleLabel(weekStart,end)}</h1><button id="nextWeekInline" class="week-inline-arrow" aria-label="Próxima semana">›</button></div></div><button id="todayWeekInline" class="week-today-inline">hoje</button>`;
+      $('prevWeekInline').onclick=()=>{weekStart.setDate(weekStart.getDate()-7);renderWeek()};
+      $('nextWeekInline').onclick=()=>{weekStart.setDate(weekStart.getDate()+7);renderWeek()};
+      $('todayWeekInline').onclick=()=>{weekStart=startWeek(new Date());renderWeek()};
+    }
+    const oldNav=document.querySelector('.week-nav');if(oldNav)oldNav.style.display='none';
     const today=key(new Date());
     const names=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
     let html='';
@@ -24,10 +61,11 @@
       const state=done?'done':planned?'planned':'';
       const label=done?'✓':d.getDate();
       const aria=done?`${names[i]}, ${d.getDate()}: treino concluído${sh?.name?`, ${sh.name}`:''}`:planned?`${names[i]}, ${d.getDate()}: ${sh?.name||'treino'} planejado`:`${names[i]}, ${d.getDate()}: planejar treino`;
-      html+=`<button class="week-status-day ${state} ${dk===today?'today':''}" data-day="${dk}" aria-label="${esc(aria)}"><span class="week-dow">${names[i]}</span><span class="week-circle">${label}</span><span class="week-sheet">${sh?esc(sh.name):' '}</span></button>`;
+      html+=`<button class="week-status-day ${state} ${dk===today?'today':''}" data-day="${dk}" aria-label="${esc(aria)}"><span class="week-dow">${names[i]}</span><span class="week-circle">${label}</span></button>`;
     }
     const grid=$('weekGrid');grid.className='week-grid week-status-grid';grid.innerHTML=html;
     grid.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>plannerDayClick(b.dataset.day));
+    renderWeekSummary();
   };
 
   function plannerDayClick(dk){
@@ -69,7 +107,5 @@
     showTrainingStage();open('sheetPicker');
   };
 
-  // The old monthly layer hides this nav. Re-enable it and ensure the original weekly handlers remain useful.
-  const nav=document.querySelector('.week-nav');if(nav)nav.style.display='flex';
-  setTimeout(()=>{const n=document.querySelector('.week-nav');if(n)n.style.display='flex';renderWeek()},0);
+  setTimeout(()=>renderWeek(),0);
 })();
