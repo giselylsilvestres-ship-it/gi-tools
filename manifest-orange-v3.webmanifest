@@ -5,11 +5,11 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#f4eee3",
+  "theme_color": "#f4eee3",
   "icons": [
     {
-      "src": "/api/apple-touch-icon-orange-v3.png",
+      "src": "/gica-icon-black-cream-v1.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
