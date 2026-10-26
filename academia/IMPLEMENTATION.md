@@ -29,3 +29,7 @@ Release is authorized after review of the interactive demo. Deployments must ret
 ## Input refinements
 
 Loads and reps are optional when completing a series. Missing measurements stay null in saved history and do not invent volume or zero-load progression. Historical defaults search past blank records, including legacy aggregates. A manually entered load propagates to later unfinished series unless the user already edited their loads; each drop stage and warm-up remain independent. Touch inputs use at least 16px and touch-action manipulation to avoid focus/double-tap zoom while preserving pinch zoom. Enter completes the current series.
+
+## Compact table and swipe actions
+
+Workout rows use aligned type badges, previous values, load, reps and completion without permanent delete controls. Swipe left reveals an explicit delete button; vertical pan remains scrolling. Keyboard users can reveal the action with ArrowLeft or delete through series type options. Series and drop removals offer a 12-second undo preserving position, loads, reps, completion and drop configuration. Rest controls live in the workout footer. Native Chromium touch tests cover swipe, deletion persistence, exact undo, independent drops, scrolling, keyboard dismissal and 320px layout.

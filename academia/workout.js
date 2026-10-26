@@ -54,11 +54,15 @@ openSession=function(){
   renderWorkout();setSaveState(activeWorkout.status==='legacy'?'Registro antigo · preservado':window.GYM_DEMO?'Prévia · salva só neste navegador':'Alterações salvas automaticamente');open('sessionModal');if(activeWorkout.status==='active')changed();
 };
 function previousSet(e,index,drop){for(const w of historyWorkouts().filter(w=>w.date<workoutDate)){const prev=w.exercises.find(x=>x.exerciseId&&x.exerciseId===e.exerciseId);const s=prev?.sets[index];const p=drop===null?s:s?.drops[drop];if(p?.done)return recordedStepLabel(p)}return '—'}
-function inputRow(e,s,index,step,drop,readonly){const done=step.done,label=drop===null?String(index+1):`D${drop+1}`;return `<div class="set-line ${done?'set-done':''} ${drop!==null?'drop-line':''}" data-set="${s.id}" data-drop="${drop??''}"><span class="set-index">${label}</span><span class="set-previous">${previousSet(e,index,drop)}</span><input aria-label="Carga ${esc(e.name)}, série ${label}" inputmode="decimal" type="number" min="0" max="10000" step="0.5" data-field="weight" value="${step.weight??''}" placeholder="—" ${readonly||done?'disabled':''}><input aria-label="Repetições ${esc(e.name)}, série ${label}" inputmode="numeric" type="number" min="1" max="1000" step="1" data-field="reps" value="${step.reps??''}" placeholder="${esc(s.targetReps||'10')}" ${readonly||done?'disabled':''}><button type="button" class="set-check" data-action="check" aria-label="${done?'Desmarcar':'Concluir'} ${esc(e.name)}, série ${label}" aria-pressed="${done}" ${readonly?'disabled':''}>${done?'✓':'○'}</button></div>`}
+function inputRow(e,s,index,step,drop,readonly){
+  const done=step.done,typeNames={normal:'Normal',warmup:'Aquecimento',drop:'Dropset',failure:'Até a falha'},number=e.sets.slice(0,index+1).filter(x=>x.type!=='warmup').length;
+  const label=drop!==null?`D${drop+1}`:s.type==='warmup'?'W':s.type==='failure'?'F':String(number),typeLabel=drop===null?typeNames[s.type]:`Redução ${drop+1}`;
+  return `<div class="set-swipe ${readonly?'read-only':''}" data-set="${s.id}" data-drop="${drop??''}" ${readonly?'':`tabindex="0" role="group" aria-label="${esc(e.name)}, série ${label}. Deslize para a esquerda para excluir."`}>${!readonly?`<button type="button" class="set-delete" tabindex="-1" aria-hidden="true" aria-label="Excluir ${esc(e.name)}, série ${label}">Excluir</button>`:''}<div class="set-line ${done?'set-done':''} ${drop!==null?'drop-line':''}" data-set="${s.id}" data-drop="${drop??''}">${drop===null?`<button type="button" class="set-index set-index-${s.type}" data-action="type" data-set="${s.id}" aria-label="Tipo da série ${label}: ${typeLabel}" ${readonly?'disabled':''}>${label}${s.type==='drop'?'<small>D</small>':''}</button>`:`<span class="set-index set-index-drop" aria-label="${typeLabel}">${label}</span>`}<span class="set-previous">${previousSet(e,index,drop)}</span><input aria-label="Carga ${esc(e.name)}, série ${label}" inputmode="decimal" type="number" min="0" max="10000" step="0.5" data-field="weight" value="${step.weight??''}" placeholder="—" ${readonly||done?'disabled':''}><input aria-label="Repetições ${esc(e.name)}, série ${label}" inputmode="numeric" type="number" min="1" max="1000" step="1" data-field="reps" value="${step.reps??''}" placeholder="${esc(s.targetReps||'10')}" ${readonly||done?'disabled':''}><button type="button" class="set-check" data-action="check" aria-label="${done?'Desmarcar':'Concluir'} ${esc(e.name)}, série ${label}" aria-pressed="${done}" ${readonly?'disabled':''}>✓</button></div></div>`;
+}
 function renderWorkout(){
   const w=activeWorkout;if(!w)return;const readonly=w.status!=='active',st=Gym.stats(w),groups=[...new Set(w.exercises.map(e=>e.supersetId).filter(Boolean))];
-  $('sessionExercises').innerHTML=`<div class="workout-dashboard"><div><small>DURAÇÃO</small><strong id="workoutDuration">0:00</strong></div><div><small>VOLUME</small><strong>${numericLabel(st.volume)} <em>kg</em></strong></div><div><small>SÉRIES</small><strong>${st.done}<em> / ${st.total}</em></strong></div></div><div class="progress-track"><i style="width:${st.total?st.done/st.total*100:0}%"></i></div><div id="restTimer" class="rest-timer" hidden></div>${w.status==='finished'?'<div class="finished-banner">✓ Treino concluído. Cada série ficou registrada.</div>':''}${w.status==='legacy'?'<div class="finished-banner">Histórico anterior: o app guardava um resumo por exercício. Não estimamos séries que não foram registradas.</div>':''}`+w.exercises.map((e,ei)=>{
-    const group=e.supersetId?groups.indexOf(e.supersetId)+1:0;return `<article class="lift-card ${group?'grouped':''}" id="lift-${e.id}" data-lift="${e.id}">${group?`<div class="superset-label">SUPERSET ${group} <span>· descanso após a rodada completa</span></div>`:''}<div class="lift-head">${e.imageUrl?`<img src="${esc(e.imageUrl)}" alt="" class="lift-thumb">`:'<span class="lift-thumb placeholder">↗</span>'}<div><h3>${esc(e.name)}</h3><button class="text-button" data-action="rest" ${readonly?'disabled':''}>◷ Descanso ${timeLabel(e.restSeconds)}</button></div>${!readonly?`<button class="icon-btn" data-action="exercise-menu" aria-label="Opções de ${esc(e.name)}">···</button>`:''}</div>${e.legacy?`<p class="legacy-summary">${esc(e.legacySummary)}</p>`:`<div class="set-table"><div class="set-head"><span>SÉRIE</span><span>ANTERIOR</span><span>KG</span><span>REPS</span><span>✓</span></div>${e.sets.map((s,i)=>`<div class="set-block" data-block="${s.id}"><div class="set-type-label"><button class="text-button" data-action="type" data-set="${s.id}" ${readonly?'disabled':''}>${({normal:'Normal',warmup:'Aquecimento',drop:'Dropset',failure:'Até a falha'})[s.type]}</button>${!readonly?`<button class="remove-set" data-action="remove-set" data-set="${s.id}" aria-label="Remover série ${i+1}">×</button>`:''}</div>${inputRow(e,s,i,s,null,readonly)}${s.drops.map((d,j)=>inputRow(e,s,i,d,j,readonly)).join('')}${s.type==='drop'&&!readonly?`<button class="add-drop" data-action="add-drop" data-set="${s.id}">+ redução de carga</button>`:''}</div>`).join('')}</div>`}${e.notes?`<p class="lift-note">${esc(e.notes)}</p>`:''}${!readonly?'<button class="add-set" data-action="add-set">+ Adicionar série</button>':''}</article>`
+  $('sessionExercises').innerHTML=`<div class="workout-dashboard"><div><small>DURAÇÃO</small><strong id="workoutDuration">0:00</strong></div><div><small>VOLUME</small><strong>${numericLabel(st.volume)} <em>kg</em></strong></div><div><small>SÉRIES</small><strong>${st.done}<em> / ${st.total}</em></strong></div></div><div class="progress-track"><i style="width:${st.total?st.done/st.total*100:0}%"></i></div>${w.status==='finished'?'<div class="finished-banner">✓ Treino concluído. Cada série ficou registrada.</div>':''}${w.status==='legacy'?'<div class="finished-banner">Histórico anterior: o app guardava um resumo por exercício. Não estimamos séries que não foram registradas.</div>':''}`+w.exercises.map((e,ei)=>{
+    const group=e.supersetId?groups.indexOf(e.supersetId)+1:0;return `<article class="lift-card ${group?'grouped':''}" id="lift-${e.id}" data-lift="${e.id}">${group?`<div class="superset-label">SUPERSET ${group} <span>· descanso após a rodada completa</span></div>`:''}<div class="lift-head">${e.imageUrl?`<img src="${esc(e.imageUrl)}" alt="" class="lift-thumb">`:'<span class="lift-thumb placeholder">↗</span>'}<div><h3>${esc(e.name)}</h3><div class="lift-tools"><button class="rest-chip" data-action="rest" ${readonly?'disabled':''}>◷ ${timeLabel(e.restSeconds)}</button>${!readonly?'<button class="note-chip" data-action="note">+ Nota</button>':''}</div></div>${!readonly?`<button class="icon-btn" data-action="exercise-menu" aria-label="Opções de ${esc(e.name)}">···</button>`:''}</div>${e.notes?`<p class="lift-note">${esc(e.notes)}</p>`:''}${e.legacy?`<p class="legacy-summary">${esc(e.legacySummary)}</p>`:`<div class="set-table"><div class="set-head"><span>SÉRIE</span><span>ANTERIOR</span><span>KG</span><span>REPS</span><span>✓</span></div>${e.sets.map((s,i)=>`<div class="set-block" data-block="${s.id}">${inputRow(e,s,i,s,null,readonly)}${s.drops.map((d,j)=>inputRow(e,s,i,d,j,readonly)).join('')}${s.type==='drop'&&!readonly?`<button class="add-drop" data-action="add-drop" data-set="${s.id}">+ redução de carga</button>`:''}</div>`).join('')}</div>`}${!readonly?'<button class="add-set" data-action="add-set">+ Adicionar série</button>':''}</article>`
   }).join('')+(!readonly?'<button class="soft wide" id="addWorkoutExercise">+ Adicionar exercício ao treino</button>':'');
   $('sessionExercises').querySelectorAll('[data-lift]').forEach(card=>{
     const e=w.exercises.find(e=>e.id===card.dataset.lift);
@@ -73,6 +77,7 @@ function renderWorkout(){
       };
       input.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();input.blur();input.closest('.set-line').querySelector('.set-check').click()}};
     });
+    if(!readonly)bindSetSwipes(card,e);
     card.querySelectorAll('[data-action]').forEach(btn=>btn.onclick=()=>workoutAction(btn.dataset.action,e,btn));
   });
   $('addWorkoutExercise')?.addEventListener('click',()=>pickExercises(items=>{items.forEach(e=>w.exercises.push(Gym.exercise({exerciseId:e.id,name:e.name,imageUrl:e.image_url})));Gym.prefill(w,prefillHistory());changed(true)}));
@@ -88,10 +93,12 @@ function workoutAction(action,e,btn){
     changed(true);return
   }
   if(action==='add-set'){if(e.sets.length>=30)return toast('Máximo de 30 séries por exercício.');const prev=e.sets.at(-1);e.sets.push(Gym.set({weight:prev?.weight??null,reps:prev?.reps??null,targetReps:prev?.targetReps||'10'}));changed(true)}
-  if(action==='remove-set'){if(e.sets.length===1)return toast('Mantenha pelo menos uma série.');if(Gym.steps(s).some(x=>x.done)&&!confirm('Remover esta série e seus registros?'))return;e.sets=e.sets.filter(x=>x!==s);changed(true)}
+  if(action==='remove-set')removeWorkoutSet(e,s,null);
   if(action==='add-drop'){if(s.drops.length>=8)return toast('Máximo de 8 reduções.');s.drops.push({id:Gym.id(),weight:null,reps:null,done:false});changed(true)}
-  if(action==='type')form('série','Tipo de série',`<div class="type-picker">${[['normal','Normal','Série de trabalho'],['warmup','Aquecimento','Preparar o movimento'],['drop','Dropset','Carga e repetições em cada redução'],['failure','Até a falha','Registrar as repetições realizadas']].map(([v,n,d])=>`<label><input type="radio" name="setType" value="${v}" ${s.type===v?'checked':''}><span><b>${n}</b><small>${d}</small></span></label>`).join('')}</div>`,()=>{const type=document.querySelector('[name=setType]:checked').value;if(type!=='drop'&&s.drops.length&&!confirm('Remover as reduções desta série?'))return;s.type=type;if(type==='drop'&&!s.drops.length)s.drops=[{id:Gym.id(),weight:null,reps:null,done:false}];if(type!=='drop')s.drops=[];close('formModal');changed(true)});
+  if(action==='type')form('série','Tipo de série',`<div class="type-picker">${[['normal','Normal','Série de trabalho'],['warmup','Aquecimento','Preparar o movimento'],['drop','Dropset','Carga e repetições em cada redução'],['failure','Até a falha','Registrar as repetições realizadas']].map(([v,n,d])=>`<label><input type="radio" name="setType" value="${v}" ${s.type===v?'checked':''}><span><b>${n}</b><small>${d}</small></span></label>`).join('')}</div><button type="button" class="soft danger-icon wide" id="deleteSelectedSet">Excluir série</button>`,()=>{const type=document.querySelector('[name=setType]:checked').value;if(type!=='drop'&&s.drops.length&&!confirm('Remover as reduções desta série?'))return;s.type=type;if(type==='drop'&&!s.drops.length)s.drops=[{id:Gym.id(),weight:null,reps:null,done:false}];if(type!=='drop')s.drops=[];close('formModal');changed(true)});
+  if(action==='type')$('deleteSelectedSet').onclick=()=>{close('formModal');removeWorkoutSet(e,s,null)};
   if(action==='rest')form('descanso','Entre séries',`<label class="field"><span>Segundos (0 = sem descanso)</span><input id="restSecondsInput" type="number" min="0" max="900" value="${e.restSeconds}"></label>`,()=>{const n=Number($('restSecondsInput').value);if(!Number.isInteger(n)||n<0||n>900)return toast('Use de 0 a 900 segundos.');e.restSeconds=n;close('formModal');changed(true)});
+  if(action==='note')form('exercício','Anotação',`<label class="field"><span>${esc(e.name)}</span><textarea id="quickExerciseNote" placeholder="Ex.: controlar a descida">${esc(e.notes)}</textarea></label>`,()=>{e.notes=$('quickExerciseNote').value;close('formModal');changed(true)});
   if(action==='exercise-menu')exerciseMenu(e);
 }
 function exerciseMenu(e){const list=activeWorkout.exercises;form('exercício',e.name,`<label class="field"><span>Superset com</span><select id="supersetWith"><option value="">Sem superset</option>${list.filter(x=>x!==e).map(x=>`<option value="${x.id}" ${e.supersetId&&e.supersetId===x.supersetId?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label><label class="field"><span>Anotações</span><textarea id="exerciseNote">${esc(e.notes)}</textarea></label><div class="exercise-menu-actions"><button class="soft" id="moveExerciseUp">↑ Subir</button><button class="soft" id="moveExerciseDown">↓ Descer</button><button class="soft danger-icon" id="removeWorkoutExercise">Remover exercício</button></div>`,()=>{const other=list.find(x=>x.id===$('supersetWith').value);if(other){const g=other.supersetId||Gym.id();e.supersetId=g;other.supersetId=g}else e.supersetId=null;e.notes=$('exerciseNote').value;Gym.normalizeGroups(list);close('formModal');changed(true)});
@@ -131,7 +138,7 @@ function setupWorkoutUI(){
   const metrics=document.querySelector('#week .metric-grid');metrics.insertAdjacentHTML('beforebegin','<div class="gym-intro"><div><small>UM TREINO DE CADA VEZ</small><h1>Seu ritmo. Sua evolução.</h1></div><button class="soft" id="startFreeWorkout">+ Treino livre</button></div><div id="todayWorkout" class="today-workout-wrap"></div>');
   document.querySelector('[data-view="week"]').textContent='Hoje';const tab=document.createElement('button');tab.dataset.view='history';tab.textContent='Histórico';document.querySelector('.view-switch').append(tab);const view=document.createElement('section');view.id='history';view.className='view';view.innerHTML='<div class="section-head"><div><small>cada série conta</small><h1>Histórico</h1></div></div><div id="historyList"></div>';document.querySelector('.app').append(view);tab.onclick=()=>{document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='history'));document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===tab));renderHistory()};
   $('startFreeWorkout').onclick=startFreeWorkout;
-  const card=$('sessionModal').querySelector('.modal-card');card.classList.add('workout-session');const status=document.createElement('button');status.id='workoutSaveState';status.className='save-state';status.setAttribute('aria-live','polite');$('sessionNotes').parentElement.before(status);status.onclick=()=>workoutConflict?resolveWorkoutConflict():persistWorkout();
+  const card=$('sessionModal').querySelector('.modal-card');card.classList.add('workout-session');card.querySelector('.modal-actions').insertAdjacentHTML('afterbegin','<div id="restTimer" class="rest-timer" hidden></div>');const status=document.createElement('button');status.id='workoutSaveState';status.className='save-state';status.setAttribute('aria-live','polite');$('sessionNotes').parentElement.before(status);status.onclick=()=>workoutConflict?resolveWorkoutConflict():persistWorkout();
   $('unplan').textContent='Salvar e sair';$('unplan').onclick=async()=>{if(activeWorkout?.status==='active'){clearTimeout(saveTimer);await persistWorkout()}close('sessionModal')};
   document.body.insertAdjacentHTML('beforeend','<div id="gymToast" class="gym-toast" role="status" hidden></div>');
   // Native modal dismissal always keeps a local checkpoint; network sync continues.
@@ -154,4 +161,74 @@ async function resolveWorkoutConflict(){
       else{changed(true);clearTimeout(saveTimer);await persistWorkout()}
     });
   }catch(error){console.error(error);toast('Não consegui buscar a versão da conta. Tente quando a conexão voltar.')}
+}
+
+function removeWorkoutSet(e,s,drop){
+  if(activeWorkout?.status!=='active'||!s)return;
+  if(drop===null&&e.sets.length===1){toast('Mantenha pelo menos uma série no exercício.');return}
+  if(!e.sets.includes(s)||(drop!==null&&!s.drops[drop]))return;
+  const workout=activeWorkout,date=workoutDate,index=e.sets.indexOf(s),snapshot=clone(drop===null?s:s.drops[drop]),oldType=s.type;
+  if(!snapshot)return;
+  if(drop===null)e.sets.splice(index,1);
+  else{s.drops.splice(drop,1);if(!s.drops.length)s.type='normal'}
+  changed(true);toast(drop===null?'Série excluída.':'Redução excluída.');
+  const message=$('gymToast'),undo=document.createElement('button');undo.type='button';undo.className='undo-series';undo.textContent='Desfazer';message.append(undo);
+  clearTimeout(message.hideTimer);message.hideTimer=setTimeout(()=>message.hidden=true,12000);
+  undo.onclick=()=>{
+    if(activeWorkout!==workout||activeWorkout.status!=='active'||workoutDate!==date||!activeWorkout.exercises.includes(e)){toast('Abra o treino original para recuperar esta série.');return}
+    if(drop===null)e.sets.splice(Math.min(index,e.sets.length),0,snapshot);
+    else if(e.sets.includes(s)){s.drops.splice(Math.min(drop,s.drops.length),0,snapshot);s.type=oldType}
+    else return toast('A série desta redução não está mais no treino.');
+    changed(true);toast('Série restaurada.');
+  };
+}
+function bindSetSwipes(card,e){
+  const width=88;
+  const toggle=(row,open)=>{
+    row.classList.toggle('is-open',open);row.classList.remove('is-dragging');
+    row.querySelector('.set-line').style.transform=open?`translateX(-${width}px)`:'';
+    const button=row.querySelector('.set-delete');button.tabIndex=open?0:-1;button.setAttribute('aria-hidden',String(!open));
+  };
+  const closeOthers=except=>document.querySelectorAll('.set-swipe.is-open').forEach(row=>{if(row!==except)toggle(row,false)});
+  card.querySelectorAll('.set-swipe:not(.read-only)').forEach(row=>{
+    const line=row.querySelector('.set-line'),s=e.sets.find(s=>s.id===row.dataset.set),drop=row.dataset.drop===''?null:Number(row.dataset.drop);
+    let gesture=null,lastSwipe=-Infinity;
+    const deleteButton=row.querySelector('.set-delete');let activated=false;
+    const remove=()=>{if(activated)return;activated=true;removeWorkoutSet(e,s,drop)};
+    deleteButton.onclick=remove;
+    deleteButton.addEventListener('pointerup',event=>{if(event.pointerType==='touch'){event.preventDefault();remove()}});
+    row.onkeydown=event=>{
+      if(event.key==='Escape'&&row.classList.contains('is-open')){event.preventDefault();event.stopPropagation();toggle(row,false);row.focus();return}
+      if(event.target!==row)return;
+      if(event.key==='ArrowLeft'){event.preventDefault();closeOthers(row);toggle(row,true);row.querySelector('.set-delete').focus()}
+      if(event.key==='Escape'||event.key==='ArrowRight'){event.preventDefault();toggle(row,false)}
+      if(event.key==='Delete'&&row.classList.contains('is-open')){event.preventDefault();removeWorkoutSet(e,s,drop)}
+    };
+    row.addEventListener('click',event=>{
+      if(event.target.closest('.set-delete'))return;
+      if(performance.now()-lastSwipe<350){event.preventDefault();event.stopImmediatePropagation();return}
+      if(row.classList.contains('is-open')){toggle(row,false);event.preventDefault();event.stopImmediatePropagation()}
+    },true);
+    line.addEventListener('pointerdown',event=>{
+      if(!event.isPrimary||event.button!==0)return;
+      closeOthers(row);gesture={id:event.pointerId,x:event.clientX,y:event.clientY,offset:row.classList.contains('is-open')?-width:0,dragging:false,value:0};
+    });
+    line.addEventListener('pointermove',event=>{
+      if(!gesture||gesture.id!==event.pointerId)return;
+      const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;
+      if(!gesture.dragging){
+        if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){gesture=null;return}
+        if(Math.abs(dx)<12||Math.abs(dx)<Math.abs(dy)*1.3)return;
+        gesture.dragging=true;row.classList.add('is-dragging');document.activeElement?.blur();line.setPointerCapture(event.pointerId);
+      }
+      event.preventDefault();gesture.value=Math.max(-width,Math.min(0,gesture.offset+dx));line.style.transform=`translateX(${gesture.value}px)`;
+    },{passive:false});
+    const finish=event=>{
+      if(!gesture||gesture.id!==event.pointerId)return;
+      const current=gesture;gesture=null;
+      if(current.dragging){lastSwipe=performance.now();toggle(row,current.value<-width*.4);if(line.hasPointerCapture(event.pointerId))line.releasePointerCapture(event.pointerId)}
+    };
+    line.addEventListener('pointerup',finish);
+    line.addEventListener('pointercancel',event=>{if(gesture?.id===event.pointerId){gesture=null;toggle(row,false)}});
+  });
 }
