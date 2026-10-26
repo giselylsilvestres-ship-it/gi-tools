@@ -1,9 +1,7 @@
 /* Completed-session actions + one solid sticky workout header. */
 .session-head-actions{display:flex;align-items:center;gap:5px;margin-left:auto}.session-head-actions .close{margin-left:2px}.session-record-action[hidden]{display:none!important}
 
-/* iOS Safari paints separate sticky children at slightly different scroll positions.
-   Keep every sticky strip opaque and extend the top strip above the modal content so
-   exercise rows can never peek through above the header either. */
+/* Sticky blocks use measured heights from session-controls.js instead of hard-coded offsets. */
 .workout-session .modal-head,
 #sessionExercises>.workout-dashboard,
 #sessionExercises>.progress-track{
@@ -17,26 +15,50 @@
   top:0;z-index:30;padding:0 0 10px;margin:0;
   box-shadow:0 -120px 0 120px var(--surface),0 14px 0 var(--surface);
 }
-#sessionExercises>.workout-dashboard{top:54px;z-index:29;margin:-1px 0 0;padding:12px 0 12px;box-shadow:0 -16px 0 16px var(--surface)}
-#sessionExercises>.progress-track{top:132px;z-index:28;margin:-2px 0 18px;padding:0 0 12px;box-shadow:0 -18px 0 18px var(--surface)}
+#sessionExercises>.workout-dashboard{
+  top:var(--session-head-height,72px);z-index:29;margin:-1px 0 0;padding:12px 0 12px;
+  box-shadow:0 -16px 0 16px var(--surface);overflow:visible!important;
+}
+#sessionExercises>.progress-track{
+  top:calc(var(--session-head-height,72px) + var(--workout-dashboard-height,78px) - 1px);
+  z-index:28;margin:-2px 0 18px;padding:0 0 12px;box-shadow:0 -18px 0 18px var(--surface);
+}
+.workout-dashboard>div{overflow:visible!important;min-height:58px}
+.workout-dashboard small{display:block!important;line-height:1.45!important;padding-top:2px!important;overflow:visible!important;white-space:nowrap}
+.workout-dashboard strong{line-height:1.15!important;overflow:visible!important}
+
+/* Workout duration play/pause — same visual language as Escrita diária. */
+.workout-duration-row{display:flex;align-items:center;gap:9px;min-height:32px}
+.workout-timer-toggle{width:30px;height:30px;min-width:30px;min-height:30px;border-radius:50%;padding:0;border:1px solid var(--border);background:var(--surface2);color:var(--text);display:grid;place-items:center;position:relative;line-height:0;cursor:pointer}
+.workout-timer-toggle svg{display:block;position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.workout-timer-toggle .play-icon{display:block;fill:currentColor;stroke:none;width:14px;height:14px}
+.workout-timer-toggle .pause-icon{display:none}
+.workout-timer-toggle.running .play-icon{display:none}
+.workout-timer-toggle.running .pause-icon{display:block}
+.workout-timer-toggle:disabled{display:none}
+
+/* Thumbnail opens only when the image itself is tapped. */
+#sessionExercises img.lift-thumb{cursor:zoom-in;touch-action:manipulation}
+#sessionExercises img.lift-thumb:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.exercise-image-viewer[hidden]{display:none!important}
+.exercise-image-viewer{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:24px}
+.exercise-image-viewer-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+.exercise-image-viewer-card{position:relative;z-index:1;width:min(92vw,760px);max-height:88dvh;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 24px 90px rgba(0,0,0,.35)}
+.exercise-image-viewer-close{position:absolute;right:14px;top:14px;z-index:2;width:42px;height:42px;border:0;border-radius:50%;background:var(--surface2);color:var(--text);font-size:28px;line-height:1;display:grid;place-items:center}
+.exercise-image-viewer-frame{height:min(68dvh,620px);display:grid;place-items:center;border-radius:14px;overflow:hidden;background:var(--surface2)}
+.exercise-image-viewer-frame img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.exercise-image-viewer-title{padding:13px 4px 2px;font-size:15px;font-weight:650;text-align:center}
 
 /* Prevent iOS text clipping inside the sticky bottom CTA. */
-#saveSession{
-  min-height:46px!important;
-  height:auto!important;
-  padding:12px 20px!important;
-  line-height:1.25!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  overflow:visible!important;
-  white-space:nowrap;
-}
+#saveSession{min-height:46px!important;height:auto!important;padding:12px 20px!important;line-height:1.25!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:visible!important;white-space:nowrap}
 
 @media(max-width:600px){
   .session-head-actions{gap:2px}
   .workout-session .modal-head{top:0;padding:0 0 9px;box-shadow:0 -120px 0 120px var(--surface),0 12px 0 var(--surface)}
-  #sessionExercises>.workout-dashboard{top:49px;padding:10px 0 11px;box-shadow:0 -16px 0 16px var(--surface)}
-  #sessionExercises>.progress-track{top:119px;margin:-2px 0 15px;padding:0 0 10px;box-shadow:0 -18px 0 18px var(--surface)}
+  #sessionExercises>.workout-dashboard{padding:10px 0 11px;box-shadow:0 -16px 0 16px var(--surface)}
+  #sessionExercises>.progress-track{margin:-2px 0 15px;padding:0 0 10px;box-shadow:0 -18px 0 18px var(--surface)}
+  .workout-dashboard>div{min-height:54px}
+  .workout-duration-row{gap:7px}.workout-timer-toggle{width:28px;height:28px;min-width:28px;min-height:28px}
+  .exercise-image-viewer{padding:12px}.exercise-image-viewer-card{width:100%;padding:12px;border-radius:18px}.exercise-image-viewer-frame{height:70dvh}.exercise-image-viewer-close{right:10px;top:10px}
   #saveSession{min-height:48px!important;padding:13px 18px!important;line-height:1.3!important}
 }
