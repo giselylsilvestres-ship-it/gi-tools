@@ -17,7 +17,7 @@ A local checkpoint is written on every edit. Failed network writes remain visibl
 
 ## Validation
 
-- `node --test academia/tests/core.test.cjs`: twelve unit tests covering drop chains, unequal supersets, optional load/reps, safe propagation, previous-load reuse, legacy preservation and orphan groups.
+- `node --test academia/tests/core.test.cjs`: fourteen unit tests covering drop chains, unequal supersets, optional load/reps, safe propagation, previous-load reuse, legacy preservation and orphan groups.
 - `node academia/tests/browser.cjs`: a self-contained local static server + Playwright flow; optional `GYM_CHROMIUM` executable path. Covers mobile/tablet layout, rest behavior, independent drop round trip, failed sync/retry, cross-device conflict resolution, partial completion, routine edits/duplication, and history. Browser demo uses an isolated adapter; it does not assert authenticated live Supabase requests.
 - Live database transaction, rolled back: snapshot round trip, revisions, stale-write rejection, RLS isolation and foreign-sheet rejection.
 - Supabase security advisors: no new database findings. Existing leaked-password protection warning is unrelated to this feature.
@@ -33,3 +33,7 @@ Loads and reps are optional when completing a series. Missing measurements stay 
 ## Compact table and swipe actions
 
 Workout rows use aligned type badges, previous values, load, reps and completion without permanent delete controls. Swipe left reveals an explicit delete button; vertical pan remains scrolling. Keyboard users can reveal the action with ArrowLeft or delete through series type options. Series and drop removals offer a 12-second undo preserving position, loads, reps, completion and drop configuration. Rest controls live in the workout footer. Native Chromium touch tests cover swipe, deletion persistence, exact undo, independent drops, scrolling, keyboard dismissal and 320px layout.
+
+## Numeric repetition defaults
+
+Rep targets are displayed separately from the numeric performed-reps field. New/incomplete unedited sets default to the previous numeric count, then to the numeric prescription (upper bound for ranges). Seconds/time targets are never converted into reps. Explicitly cleared values and completed historical blanks are preserved. Inputs are committed from the DOM before set completion and save to cover mobile keyboard/autofill change events. Live Supabase transaction rollback verified numeric 12 then edited 9 round trips; browser tests verify value, RPC response and fresh reload.

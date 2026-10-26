@@ -23,11 +23,18 @@
     }
     return null;
   }
+  function suggestedReps(target){
+    if(target==null)return null;
+    const text=String(target).trim();
+    if(/(?:\d\s*(?:s|seg(?:undo)?s?|min(?:uto)?s?)\b|segundos|minutos)/i.test(text))return null;
+    const match=text.match(/^(\d+)(?:\s*(?:[-–—]|a)\s*(\d+))?(?=$|\s|[·(])/i);
+    if(!match)return null;const value=Number(match[2]||match[1]);return Number.isInteger(value)&&value>0&&value<=1000?value:null;
+  }
   function prefill(w,history){
     w.exercises.forEach(e=>e.sets.forEach((s,i)=>steps(s).forEach((step,j)=>{
       if(step.done)return;
       const drop=j===0?null:j-1;
-      for(const field of ['weight','reps'])if(step[field]==null&&!step[field+'Edited'])step[field]=previousValue(history,e.exerciseId,i,drop,field);
+      for(const field of ['weight','reps'])if(step[field]==null&&!step[field+'Edited'])step[field]=previousValue(history,e.exerciseId,i,drop,field)??(field==='reps'?suggestedReps(s.targetReps):null);
     })));
     return w;
   }
@@ -44,11 +51,11 @@
     const w=copy(template);w.version=3;w.status='active';w.startedAt=new Date().toISOString();w.finishedAt=null;w.restEnd=null;w.elapsedSeconds=0;w.notes='';
     w.exercises.forEach(e=>e.sets.forEach((s,i)=>steps(s).forEach((step,j)=>{
       const drop=j===0?null:j-1;step.done=false;delete step.weightEdited;delete step.repsEdited;
-      for(const field of ['weight','reps'])step[field]=previousValue(history,e.exerciseId,i,drop,field)??step[field]??null;
+      for(const field of ['weight','reps'])step[field]=previousValue(history,e.exerciseId,i,drop,field)??step[field]??(field==='reps'?suggestedReps(s.targetReps):null);
     })));
     return w;
   }
   function validate(w){if(w.version!==3||!Array.isArray(w.exercises)||w.exercises.length>100)return 'Treino inválido.';if(!w.exercises.length)return 'Adicione pelo menos um exercício.';for(const e of w.exercises){if(!e.sets.length||e.sets.length>30)return 'Use entre 1 e 30 séries por exercício.';for(const s of e.sets){for(const step of steps(s))if(step.done&&!valid(step))return 'Confira os valores: carga de 0 a 10.000 kg e repetições inteiras de 1 a 1.000, ou deixe em branco.'}}return null}
   function template(w){const t=copy(w);t.exercises.forEach(e=>e.sets.forEach(s=>steps(s).forEach(x=>x.done=false)));return {version:3,name:t.name,exercises:t.exercises}}
-  return {copy,id,number,set,exercise,steps,done,valid,stats,normalizeGroups,next,fromLinks,fromLegacy,previousValue,prefill,setWeight,start,validate,template};
+  return {copy,id,number,set,exercise,steps,done,valid,stats,normalizeGroups,next,fromLinks,fromLegacy,previousValue,suggestedReps,prefill,setWeight,start,validate,template};
 });

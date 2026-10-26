@@ -28,3 +28,12 @@ test('blank completion survives validation and never fabricates volume',()=>{
 });
 
 test('prefill never rewrites a completed blank series',()=>{const w={exercises:[G.exercise({exerciseId:'x',sets:[G.set({done:true})]})]};G.prefill(w,[{exercises:[G.exercise({exerciseId:'x',sets:[complete()]})]}]);assert.equal(w.exercises[0].sets[0].weight,null)});
+
+test('rep targets suggest real integers without treating seconds or prose as repetitions',()=>{
+ for(const [text,value] of [['10',10],['8–12 · progredindo carga',12],['8-12',12],['8 a 12',12],['10 cada perna',10],['10 · drop na última',10],['30 segundos',null],['30s',null],['1 min',null],['até a falha',null],['3x10',null]])assert.equal(G.suggestedReps(text),value,text);
+});
+test('new and resumed sets fill numeric reps, prefer history, and preserve explicit blanks',()=>{
+ const template={name:'A',exercises:[G.exercise({exerciseId:'x',sets:[G.set({targetReps:'8–12'}),G.set({targetReps:'10 cada perna'})]})]};const w=G.start(template);assert.deepEqual(w.exercises[0].sets.map(s=>s.reps),[12,10]);
+ const hist=[{exercises:[G.exercise({exerciseId:'x',sets:[complete({reps:9}),complete({reps:8})]})]}];assert.deepEqual(G.start(template,hist).exercises[0].sets.map(s=>s.reps),[9,8]);
+ w.exercises[0].sets[0].reps=null;w.exercises[0].sets[1].reps=null;w.exercises[0].sets[1].repsEdited=true;G.prefill(w,[]);assert.deepEqual(w.exercises[0].sets.map(s=>s.reps),[12,null]);
+});
