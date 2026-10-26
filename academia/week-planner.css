@@ -1,0 +1,29 @@
+/* Weekly planner: compact Monday–Sunday status strip. */
+.week-head{align-items:center!important;margin-bottom:16px!important}
+.week-head>div:first-child small{display:none}
+.week-head h1{font-size:22px!important;letter-spacing:-.02em!important;margin:0!important}
+.week-nav{display:flex!important;align-items:center;gap:7px}
+.week-nav button{height:36px;min-width:36px;padding:0 10px!important;display:grid;place-items:center}
+.week-nav #todayWeek{font-size:11px;padding:0 12px!important}
+.week-grid.week-status-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;border:1px solid var(--border)!important;border-radius:20px!important;overflow:visible!important;background:var(--surface)!important;padding:18px 14px!important;gap:8px!important}
+.week-status-day{border:0!important;background:transparent!important;min-height:0!important;padding:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:9px!important;text-align:center!important;color:var(--text)!important}
+.week-status-day .week-dow{font-size:11px;font-weight:650;color:var(--muted);text-transform:capitalize}
+.week-status-day .week-circle{width:48px;height:48px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);display:grid;place-items:center;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;transition:transform .15s,border-color .15s,background .15s,color .15s}
+.week-status-day:hover .week-circle{transform:translateY(-1px)}
+.week-status-day.today .week-circle{box-shadow:0 0 0 2px var(--surface),0 0 0 4px color-mix(in srgb,var(--accent) 55%,transparent)}
+.week-status-day.planned .week-circle{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--surface));color:var(--accent)}
+.week-status-day.done .week-circle{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--surface));color:var(--good);font-size:23px}
+.week-status-day .week-sheet{width:100%;min-height:14px;font-size:9px;line-height:1.2;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.week-status-day.planned .week-sheet{color:var(--accent)}
+.week-status-day.done .week-sheet{color:var(--good)}
+
+/* Two-step training > sheet picker. */
+#sheetOptions .picker-back{margin-bottom:4px;border-style:dashed;color:var(--muted)}
+#sheetOptions .option strong{display:block}
+#sheetOptions .option small{display:block}
+
+@media(max-width:600px){
+  .week-head{gap:10px!important}.week-head h1{font-size:17px!important}.week-nav{gap:4px}.week-nav button{height:32px;min-width:32px}.week-nav #todayWeek{display:none}
+  .week-grid.week-status-grid{padding:14px 7px!important;gap:3px!important;border-radius:17px!important}
+  .week-status-day{gap:7px!important}.week-status-day .week-dow{font-size:9px}.week-status-day .week-circle{width:39px;height:39px;font-size:14px}.week-status-day.done .week-circle{font-size:20px}.week-status-day .week-sheet{font-size:7px}
+}
