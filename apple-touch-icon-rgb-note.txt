@@ -1,0 +1,1 @@
+The iOS touch icon is being replaced with an RGB PNG generated from the supplied artwork.
