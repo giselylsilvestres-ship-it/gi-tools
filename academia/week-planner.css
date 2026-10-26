@@ -1,4 +1,5 @@
 /* Weekly planner: compact Monday–Sunday status strip + weekly detail list. */
+.gym-intro #startFreeWorkout{display:none!important}
 .week-head{display:flex!important;align-items:center!important;justify-content:center!important;margin:30px 0 18px!important;text-align:center!important}
 .week-range-line{display:flex;align-items:center;justify-content:center;gap:12px;width:100%}
 .week-head h1{font-size:23px!important;letter-spacing:-.025em!important;margin:0!important;line-height:1.15}
@@ -35,6 +36,7 @@
 #sheetOptions .picker-back{margin-bottom:4px;border-style:dashed;color:var(--muted)}
 #sheetOptions .option strong{display:block}
 #sheetOptions .option small{display:block}
+#sheetOptions .free-workout-option{margin-top:7px;border-style:dashed;background:var(--surface2)}
 
 @media(max-width:700px){
   .week-head{margin-top:24px!important}.week-head h1{font-size:18px!important}.week-range-line{gap:8px}.week-inline-arrow{width:32px;height:32px;font-size:21px}
