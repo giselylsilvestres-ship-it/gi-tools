@@ -1,0 +1,8 @@
+/* Completed-session actions + sticky workout summary. */
+.session-head-actions{display:flex;align-items:center;gap:5px;margin-left:auto}.session-head-actions .close{margin-left:2px}.session-record-action[hidden]{display:none!important}
+.session-save-exit{width:44px!important;height:44px!important;min-width:44px!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center!important;margin-right:auto}.session-save-exit span{font-size:22px;line-height:1;transform:translateY(-1px)}
+/* Keep title + live stats visible while the exercise list scrolls. */
+.workout-session .modal-head{position:sticky;top:-24px;z-index:8;background:var(--surface);padding:12px 0 8px;margin-bottom:0}
+#sessionExercises>.workout-dashboard{position:sticky;top:55px;z-index:7;background:var(--surface);margin:0;padding:12px 0 10px}
+#sessionExercises>.progress-track{position:sticky;top:139px;z-index:7;background:var(--surface);margin:0 0 20px;padding-bottom:10px}
+@media(max-width:600px){.workout-session .modal-head{top:-18px}.session-head-actions{gap:2px}#sessionExercises>.workout-dashboard{top:51px;padding-top:10px}#sessionExercises>.progress-track{top:129px}.session-save-exit{width:42px!important;height:42px!important;min-width:42px!important}}
