@@ -14,10 +14,12 @@ function number(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
 }
 
-export function dailyRow(userId, date, summary, sleep, hrv) {
+export function dailyRow(userId, date, summary, sleep, hrv, sleepSummaries) {
   const day = summary?.data?.find(item => item.calendarDate === date);
   if (!day) throw new Error('Garmin has no daily summary for requested date');
-  const dto = sleep?.dailySleepDTO ?? sleep;
+  const dailySleep = sleep?.dailySleepDTO ?? sleep;
+  const dto = number(dailySleep?.sleepTimeSeconds) !== null ? dailySleep :
+    sleepSummaries?.find(item => item.calendarDate === date) ?? dailySleep;
   if (dto?.calendarDate && dto.calendarDate !== date) throw new Error('Garmin sleep date mismatch');
   return {
     user_id: userId, date,
@@ -27,7 +29,7 @@ export function dailyRow(userId, date, summary, sleep, hrv) {
     calories_total: number(day.calories?.burnedTotal ?? day.totalKilocalories),
     calories_resting: number(day.calories?.burnedResting ?? day.bmrKilocalories),
     calories_active: number(day.calories?.burnedActive ?? day.activeKilocalories),
-    raw_data: { summary, sleep, hrv },
+    raw_data: { summary, sleep, hrv, sleep_summaries: sleepSummaries },
     synced_at: new Date().toISOString()
   };
 }
@@ -67,10 +69,11 @@ export default async function handler(req, res) {
     if (!token) throw new Error('Garmin returned an empty token');
     const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' };
     // Fetch all sources before writing; upstream errors must never erase an existing row.
-    const [summary, sleep, hrv] = await Promise.all([
+    const [summary, sleep, hrv, sleepSummaries] = await Promise.all([
       `/usersummary-service/v2/dailysummaries?startDate=${date}&endDate=${date}`,
       `/sleep-service/sleep/dailySleep?date=${date}`,
-      `/hrv-service/hrv/${date}`
+      `/hrv-service/hrv/${date}`,
+      `/sleep-service/sleep/dailySleepSummariesByDate?startDate=${date}&endDate=${date}`
     ].map(async path => {
       const response = await request(`${GARMIN}${path}`, { headers });
       const body = await response.text();
@@ -78,7 +81,7 @@ export default async function handler(req, res) {
       try { return JSON.parse(body); }
       catch { throw new Error(`Invalid Garmin JSON at ${path.split('?')[0]}`); }
     }));
-    const row = dailyRow(GARMIN_USER_ID.trim(), date, summary, sleep, hrv);
+    const row = dailyRow(GARMIN_USER_ID.trim(), date, summary, sleep, hrv, sleepSummaries);
     const saved = await (await request(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/garmin_daily?on_conflict=user_id,date&select=id,date,synced_at`, {
       method: 'POST',
       headers: {
