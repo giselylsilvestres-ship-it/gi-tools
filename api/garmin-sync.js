@@ -71,7 +71,13 @@ export default async function handler(req, res) {
       `/usersummary-service/v2/dailysummaries?startDate=${date}&endDate=${date}`,
       `/sleep-service/sleep/dailySleep?date=${date}`,
       `/hrv-service/hrv/${date}`
-    ].map(async path => (await request(`${GARMIN}${path}`, { headers })).json()));
+    ].map(async path => {
+      const response = await request(`${GARMIN}${path}`, { headers });
+      const body = await response.text();
+      if (!body.trim()) return null; // Garmin returns 204 when an optional metric is unavailable.
+      try { return JSON.parse(body); }
+      catch { throw new Error(`Invalid Garmin JSON at ${path.split('?')[0]}`); }
+    }));
     const row = dailyRow(GARMIN_USER_ID.trim(), date, summary, sleep, hrv);
     const saved = await (await request(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/garmin_daily?on_conflict=user_id,date&select=id,date,synced_at`, {
       method: 'POST',
