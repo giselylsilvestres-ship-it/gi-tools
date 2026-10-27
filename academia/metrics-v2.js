@@ -1,6 +1,8 @@
 (()=>{
 const el=id=>document.getElementById(id),DAY=864e5,dash='—';
-const PALETTE=['#B57056','#A7993C','#475480','#DCCD8A','#7F3B25'];
+// Ordered visual sequence requested for all categorical bars/markers:
+// Master Key → Prickly Pear → Mozart → Sunburn → Roycroft Copper Red.
+const PALETTE=['#DCCD8A','#A7993C','#475480','#B57056','#7F3B25'];
 function d(s){return new Date(`${s}T12:00:00`)}function monday(x){x=new Date(x);x.setHours(12,0,0,0);let n=x.getDay()||7;x.setDate(x.getDate()-n+1);return x}function pct(a,b){return b?Math.round(a/b*100):0}function fmt(v,n=1){return Number(v).toFixed(n).replace('.',',')}
 function activityName(s){const raw=String(s.workout_data?.name||'').toLowerCase();if(/muscula|leg|push|pull|ppl|perna|bunda/.test(raw))return'Musculação';if(/box/.test(raw))return'Boxe';if(/funcional/.test(raw))return'Funcional';if(/hiit/.test(raw))return'HIIT';if(/spinning|cycling|velocity/.test(raw))return'Spinning';if(/corr|race/.test(raw))return'Corrida';if(/caminh/.test(raw))return'Caminhada';if(/dança|danca/.test(raw))return'Dança';return raw?raw[0].toUpperCase()+raw.slice(1):'Outros'}
 function setsFrom(sessions){const out=[];for(const s of sessions)for(const ex of(s.workout_data?.exercises||[]))for(const set of(ex.sets||[])){if(!set.done||set.type==='warmup')continue;const w=set.weight==null||set.weight===''?null:Number(set.weight),r=set.reps==null||set.reps===''?null:Number(set.reps);out.push({date:s.session_date,exercise:ex.name,exerciseId:ex.exerciseId,weight:Number.isFinite(w)?w:null,reps:Number.isFinite(r)?r:null});for(const drop of(set.drops||[])){const dw=drop.weight==null||drop.weight===''?null:Number(drop.weight),dr=drop.reps==null||drop.reps===''?null:Number(drop.reps);if(Number.isFinite(dw)&&Number.isFinite(dr)&&dw>0&&dr>0)out.push({date:s.session_date,exercise:ex.name,exerciseId:ex.exerciseId,weight:dw,reps:dr,drop:true})}}return out}
