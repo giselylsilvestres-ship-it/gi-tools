@@ -15,3 +15,24 @@
   #giNav .gi-avatar-pencil,#giNav .gi-profile-copy{display:none!important}
   #giNav .gi-account-pop{left:auto!important;right:0!important;bottom:54px!important}
 }
+
+/* Gica Tools module marks */
+#giNav .gi-nav-icon{width:27px!important;height:27px!important;flex:0 0 27px!important;border-radius:8px!important;position:relative!important;overflow:hidden!important;box-shadow:inset 0 -2px 0 rgba(70,50,30,.12)!important}
+#giNav .gi-nav-icon svg{display:none!important}
+#giNav .gi-nav-link[href="/"] .gi-nav-icon{background:#DCCD8B!important}
+#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon{background:#A7993C!important}
+#giNav .gi-nav-link[href="/check-in-diario/"] .gi-nav-icon{background:#475480!important}
+#giNav .gi-nav-link[href="/academia/"] .gi-nav-icon{background:#B57056!important}
+#giNav .gi-nav-icon:before,#giNav .gi-nav-icon:after{content:"";position:absolute;display:block}
+/* início: quatro blocos */
+#giNav .gi-nav-link[href="/"] .gi-nav-icon:before{width:6px;height:6px;left:6px;top:6px;border-radius:2px;background:#f7e8c8;box-shadow:9px 0 #f7e8c8,0 9px #f7e8c8,9px 9px #f7e8c8,0 1px 0 rgba(100,70,30,.16),9px 1px 0 rgba(100,70,30,.16),0 10px 0 rgba(100,70,30,.16),9px 10px 0 rgba(100,70,30,.16)}
+/* escrita: ponta de caneta */
+#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon:before{width:14px;height:17px;left:6px;top:4px;background:#f7e8c8;clip-path:polygon(10% 0,100% 38%,78% 100%,0 62%)}
+#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon:after{width:2px;height:13px;left:11px;top:5px;background:#A7993C;transform:rotate(-31deg);transform-origin:bottom;border-radius:2px;box-shadow:0 1px 0 rgba(0,0,0,.1)}
+/* check-in: bloco + tick */
+#giNav .gi-nav-link[href="/check-in-diario/"] .gi-nav-icon:before{width:17px;height:17px;left:5px;top:4px;border-radius:5px;background:#f7e8c8;box-shadow:-1px 2px 0 #d9c39f;transform:rotate(-4deg)}
+#giNav .gi-nav-link[href="/check-in-diario/"] .gi-nav-icon:after{width:8px;height:4px;left:9px;top:9px;border-left:3px solid #475480;border-bottom:3px solid #475480;transform:rotate(-45deg)}
+/* academia: halter */
+#giNav .gi-nav-link[href="/academia/"] .gi-nav-icon:before{width:15px;height:5px;left:6px;top:11px;border-radius:2px;background:#f7e8c8;transform:rotate(-10deg);box-shadow:0 1px 0 #d9c39f}
+#giNav .gi-nav-link[href="/academia/"] .gi-nav-icon:after{width:5px;height:14px;left:6px;top:6px;border-radius:3px;background:#f7e8c8;transform:rotate(-10deg);box-shadow:11px 2px 0 #f7e8c8,0 1px 0 #d9c39f,11px 3px 0 #d9c39f}
+@media(max-width:760px){#giNav .gi-nav-icon{width:27px!important;height:27px!important;flex-basis:27px!important}}
