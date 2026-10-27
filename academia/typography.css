@@ -1,0 +1,24 @@
+/* Typography system mirrored from Escrita Diária. Keep that module untouched. */
+body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.app-header>strong{font-size:18px;font-weight:650;letter-spacing:-.01em}
+.view-switch button{font-size:13px;font-weight:400}
+.metric .metric-title{font-size:14px;font-weight:650;line-height:1.15;letter-spacing:-.012em}
+.metric .metric-description{font-size:11px;font-weight:400;line-height:1.35}
+.metric>strong{font-family:inherit;font-size:34px;font-weight:650;line-height:1.02;letter-spacing:-.04em}
+.metric .metric-context{font-size:11px;font-weight:400;line-height:1.35}
+.metrics-details-toggle{font-size:12px;font-weight:500}
+.detail-card-head strong{font-size:16px;font-weight:650;letter-spacing:-.018em}
+.detail-card-head small{font-size:11px;font-weight:400;line-height:1.4}
+.balance-name{font-size:12px;font-weight:500}
+.balance-row strong{font-size:11px;font-weight:650}
+.balance-row small{font-size:11px;font-weight:500}
+.week-head h1,.section-head h1{font-size:32px;font-weight:650;line-height:1.05;letter-spacing:-.04em}
+.week-head small,.section-head small,.modal-head small{font-size:12px;font-weight:400}
+.date{font-weight:650}.workout{font-weight:600}
+.program-card strong,.catalog-card strong{font-weight:620}
+.modal-head h2{font-weight:650;letter-spacing:-.035em}
+.field span,.field label{font-weight:600}
+.exercise-copy strong{font-weight:600}
+.exercise-stats strong{font-weight:650}
+.pr-copy strong{font-weight:620}.pr-value{font-weight:600}
+@media(max-width:560px){.metric .metric-title{font-size:13px}.metric .metric-description{font-size:10px}.metric>strong{font-size:30px}.metric .metric-context{font-size:10px}.detail-card-head strong{font-size:15px}.balance-name{font-size:11px}}
