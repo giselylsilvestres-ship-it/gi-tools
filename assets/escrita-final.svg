@@ -1,20 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
   <defs>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="-2" dy="5" stdDeviation="3" flood-color="#b9aa91" flood-opacity=".48"/>
+      <feDropShadow dx="-3" dy="5" stdDeviation="3" flood-color="#b9aa91" flood-opacity=".34"/>
     </filter>
     <filter id="grain" x="-10%" y="-10%" width="120%" height="120%">
-      <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="7" result="noise"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" seed="9" result="noise"/>
       <feComposite in="noise" in2="SourceGraphic" operator="in" result="texture"/>
       <feBlend in="SourceGraphic" in2="texture" mode="soft-light"/>
     </filter>
   </defs>
-  <rect width="256" height="256" fill="#050505"/>
-  <g transform="translate(128 128) rotate(43) translate(-128 -128)" filter="url(#soft)">
-    <rect x="100" y="45" width="56" height="78" rx="18" fill="#f4efe5" filter="url(#grain)"/>
-    <path d="M99 130 Q128 118 157 130 L151 188 Q147 205 128 218 Q109 205 105 188 Z" fill="#f4efe5" filter="url(#grain)"/>
-    <circle cx="128" cy="157" r="9" fill="#050505"/>
-    <path d="M128 166 L128 210" stroke="#050505" stroke-width="7" stroke-linecap="round"/>
-    <path d="M128 210 L117 218 L128 216 L139 218 Z" fill="#050505"/>
+  <rect width="256" height="256" rx="34" fill="#050505"/>
+  <g transform="translate(128 124) rotate(-10) translate(-128 -124)" filter="url(#soft)">
+    <!-- fountain-pen nib only: no handle -->
+    <path d="M72 58 L116 42 L128 72 L140 42 L184 58 L194 158 L128 202 L62 158 Z" fill="#f4efe5" filter="url(#grain)"/>
+    <circle cx="128" cy="126" r="10" fill="#050505"/>
+    <path d="M128 136 L128 190" stroke="#050505" stroke-width="8" stroke-linecap="round"/>
+    <!-- small detached base, as in the approved reference -->
+    <rect x="90" y="194" width="76" height="24" rx="8" fill="#f4efe5" filter="url(#grain)"/>
+    <rect x="101" y="200" width="9" height="12" rx="4" fill="#d9c39f" opacity=".58"/>
+    <rect x="146" y="200" width="9" height="12" rx="4" fill="#d9c39f" opacity=".58"/>
   </g>
 </svg>
