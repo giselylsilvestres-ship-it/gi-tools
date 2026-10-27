@@ -26,9 +26,9 @@
 #giNav .gi-nav-icon:before,#giNav .gi-nav-icon:after{content:"";position:absolute;display:block}
 /* início: quatro blocos */
 #giNav .gi-nav-link[href="/"] .gi-nav-icon:before{width:6px;height:6px;left:6px;top:6px;border-radius:2px;background:#f7e8c8;box-shadow:9px 0 #f7e8c8,0 9px #f7e8c8,9px 9px #f7e8c8,0 1px 0 rgba(100,70,30,.16),9px 1px 0 rgba(100,70,30,.16),0 10px 0 rgba(100,70,30,.16),9px 10px 0 rgba(100,70,30,.16)}
-/* escrita: use the approved generated artwork exactly */
-#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon{background:#A7993C url('/assets/escrita-black.svg?v=2') center/cover no-repeat!important}
+/* escrita: verde + cinza, sem asset externo */
 #giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon:before,#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon:after{display:none!important}
+#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon svg{display:block!important;width:18px!important;height:18px!important;color:#6B6A66!important;stroke:#6B6A66!important;stroke-width:2.15!important}
 /* check-in: bloco + tick */
 #giNav .gi-nav-link[href="/check-in-diario/"] .gi-nav-icon:before{width:17px;height:17px;left:5px;top:4px;border-radius:5px;background:#f7e8c8;box-shadow:-1px 2px 0 #d9c39f;transform:rotate(-4deg)}
 #giNav .gi-nav-link[href="/check-in-diario/"] .gi-nav-icon:after{width:8px;height:4px;left:9px;top:9px;border-left:3px solid #475480;border-bottom:3px solid #475480;transform:rotate(-45deg)}
@@ -37,6 +37,6 @@
 #giNav .gi-nav-link[href="/academia/"] .gi-nav-icon:after{width:5px;height:14px;left:6px;top:6px;border-radius:3px;background:#f7e8c8;transform:rotate(-10deg);box-shadow:11px 2px 0 #f7e8c8,0 1px 0 #d9c39f,11px 3px 0 #d9c39f}
 @media(max-width:760px){#giNav .gi-nav-icon{width:27px!important;height:27px!important;flex-basis:27px!important}}
 
-/* Home card: same generated Escrita artwork, no SVG reconstruction */
-.icon.escrita{background:#A7993C url('/assets/escrita-black.svg?v=2') center/cover no-repeat!important}
-.icon.escrita>svg{display:none!important}
+/* Home card: use inline SVG so it cannot break */
+.icon.escrita{background:#A7993C!important;background-image:none!important}
+.icon.escrita>svg{display:block!important}
