@@ -17,16 +17,16 @@ function number(value) {
 export function dailyRow(userId, date, summary, sleep, hrv) {
   const day = summary?.data?.find(item => item.calendarDate === date);
   if (!day) throw new Error('Garmin has no daily summary for requested date');
-  const dto = sleep?.dailySleepDTO;
+  const dto = sleep?.dailySleepDTO ?? sleep;
   if (dto?.calendarDate && dto.calendarDate !== date) throw new Error('Garmin sleep date mismatch');
   return {
     user_id: userId, date,
     sleep_score: number(dto?.sleepScores?.overall?.value),
     sleep_minutes: number(dto?.sleepTimeSeconds) === null ? null : Math.round(dto.sleepTimeSeconds / 60),
     hrv: number(hrv?.hrvSummary?.lastNightAvg),
-    calories_total: number(day.totalKilocalories),
-    calories_resting: number(day.bmrKilocalories),
-    calories_active: number(day.activeKilocalories),
+    calories_total: number(day.calories?.burnedTotal ?? day.totalKilocalories),
+    calories_resting: number(day.calories?.burnedResting ?? day.bmrKilocalories),
+    calories_active: number(day.calories?.burnedActive ?? day.activeKilocalories),
     raw_data: { summary, sleep, hrv },
     synced_at: new Date().toISOString()
   };
