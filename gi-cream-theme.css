@@ -3,3 +3,9 @@ html[data-theme="light"]{--bg:var(--gi-cream)!important;--surface:var(--gi-cream
 html[data-theme="dark"]{--text:#eee7da!important;--muted:#a9a297!important;--border:#403b34!important;--accent-contrast:#eee7da!important;--contrast:#eee7da!important;--gi-nav-text:#eee7da!important;--gi-nav-muted:#a9a297!important;--gi-nav-border:#403b34!important}
 html[data-theme="dark"] .primary,html[data-theme="dark"] .send-button,html[data-theme="dark"] .avatar-edit-badge,html[data-theme="dark"] .gi-avatar-pencil,html[data-theme="dark"] .today-workout b,html[data-theme="dark"] .set-done .set-check{color:#eee7da!important}
 html[data-theme="dark"] svg[stroke="white"],html[data-theme="dark"] svg[stroke="#fff"],html[data-theme="dark"] svg[stroke="#ffffff"]{stroke:#eee7da!important}
+
+/* Final module artwork — same asset in navigation and home card */
+#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon{background:#050505 url('/assets/escrita-final.svg?v=1') center/cover no-repeat!important}
+#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon:before,#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon:after,#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon svg{display:none!important}
+.icon.escrita{background:#050505 url('/assets/escrita-final.svg?v=1') center/cover no-repeat!important}
+.icon.escrita>svg{display:none!important}
