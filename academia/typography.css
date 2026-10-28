@@ -4,4 +4,21 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Text","S
 .metric .metric-title{font-size:17px;font-weight:650;line-height:1.2;letter-spacing:-.015em}.metric .metric-description{font-size:13px;font-weight:400;line-height:1.45}.metric>strong{font-family:inherit;font-size:31px;font-weight:650;line-height:1.05;letter-spacing:-.04em}.metric .metric-context{font-size:12px;font-weight:400;line-height:1.4}.metrics-details-toggle{font-size:13px;font-weight:500}
 .detail-card-head strong{font-size:17px;font-weight:650;letter-spacing:-.02em}.detail-card-head small{font-size:12px;font-weight:400;line-height:1.45}.balance-name{font-size:13px;font-weight:500}.balance-row strong{font-size:12px;font-weight:650}.balance-row small{font-size:12px;font-weight:500}.strength-empty{font-size:18px}
 .week-head h1,.section-head h1{font-size:34px;font-weight:650;line-height:1.02;letter-spacing:-.045em}.week-head small,.section-head small,.modal-head small{font-size:12px;font-weight:400}.dow,.meta{font-size:12px}.date{font-size:22px;font-weight:650}.workout{font-size:14px;font-weight:600}.program-card strong{font-size:17px;font-weight:620}.catalog-card strong{font-size:17px;font-weight:620}.catalog-card .meta,.program-card .meta{font-size:12px}.modal-head h2{font-size:30px;font-weight:650;letter-spacing:-.035em}.field span,.field label{font-size:13px;font-weight:600}.exercise-copy strong{font-size:15px;font-weight:600}.exercise-copy span{font-size:12px}.exercise-stats strong{font-size:22px;font-weight:650}.exercise-stats span{font-size:12px}.pr-copy strong{font-size:14px;font-weight:620}.pr-copy small{font-size:12px}.pr-value{font-size:13px;font-weight:600}.tag{font-size:12px}
+
+/* Academia-only color language: Mozart = active/planned, Prickly Pear = completed. */
+:root{--accent:#475480;--good:#A7993C;--accent-wash:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.primary,.today-workout b{background:var(--accent);color:var(--bg)}
+.week-status-day.planned .week-circle{border-color:var(--accent);background:var(--accent);color:var(--bg)}
+.week-status-day.done .week-circle{border-color:var(--good);background:var(--good);color:var(--bg)}
+.week-status-day.today .week-circle{box-shadow:0 0 0 2px var(--surface),0 0 0 4px color-mix(in srgb,var(--accent) 55%,transparent)}
+.summary-status.planned{background:var(--accent);color:var(--bg)}
+.summary-status.done{background:var(--good);color:var(--bg)}
+.set-check{background:var(--accent);color:var(--bg)}
+.set-done .set-check{background:var(--good);color:var(--bg)}
+
+/* Keep every weekly row on the same three column rails. */
+.week-summary-row{grid-template-columns:minmax(250px,1.15fr) minmax(220px,2fr) 140px}
+.summary-status{justify-self:end}
+
+@media(max-width:700px){.week-summary-row{grid-template-columns:1fr auto}.summary-date{grid-column:1/-1}}
 @media(max-width:560px){.metric .metric-title{font-size:16px}.metric .metric-description{font-size:12px}.metric>strong{font-size:30px}.metric .metric-context{font-size:11px}.detail-card-head strong{font-size:16px}.detail-card-head small{font-size:12px}.balance-name{font-size:12px}.week-head h1,.section-head h1{font-size:32px}}
