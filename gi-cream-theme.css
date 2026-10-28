@@ -19,3 +19,7 @@ html[data-theme="dark"] svg[stroke="white"],html[data-theme="dark"] svg[stroke="
 /* Shared Academia artwork, centered consistently across all modules. */
 #giNav .gi-nav-link[href="/academia/"] .gi-nav-icon,.icon.academia{background:#000 url('/assets/academia-dumbbell-v1.png') center / 75% 75% no-repeat!important}
 .icon.academia>svg{display:none!important}
+
+/* Shared Check-in artwork for sidebar and home. */
+#giNav .gi-nav-link[href="/check-in-diario/"] .gi-nav-icon,.icon.checkin{background:#000 url('/assets/checkin-smile-v1.png') center / 75% 75% no-repeat!important}
+.icon.checkin>svg{display:none!important}
