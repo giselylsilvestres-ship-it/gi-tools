@@ -69,3 +69,7 @@ button,input,select,textarea,a{touch-action:manipulation}
 .set-reference .set-previous{max-width:100%}
 .set-target{display:block;max-width:100%;font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:350px){.set-target{font-size:8px}}
+
+
+/* Sheet actions stay visible on narrow screens, including empty sheets. */
+.routine-name-label{display:block}.routine-name-label small{display:block;font-size:11px;font-weight:400;color:var(--muted);margin-bottom:6px}.routine-actions{flex-wrap:wrap}.routine-actions #deleteRoutine{margin-right:auto;min-width:44px;min-height:44px}.session-head-actions{flex-wrap:wrap}

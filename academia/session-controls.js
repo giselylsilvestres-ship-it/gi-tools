@@ -9,6 +9,8 @@
   const actions=document.createElement('div');
   actions.className='session-head-actions';
   actions.innerHTML=`
+    <button id="editWorkoutSheet" class="icon-btn" aria-label="Editar ficha" title="Editar ficha">✎</button>
+    <button id="changeWorkoutSheet" class="soft" aria-label="Trocar ficha">Trocar ficha</button>
     <button id="deleteWorkoutRecord" class="icon-btn danger-icon session-record-action" aria-label="Excluir treino realizado" title="Excluir treino realizado" hidden>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>`;
@@ -125,7 +127,10 @@
   window.renderWorkout=function(){
     const result=originalRender.apply(this,arguments);
     const recorded=!!sessions.find(s=>s.session_date===workoutDate);
-    deleteBtn.hidden=!recorded;
+    deleteBtn.hidden=false;
+    deleteBtn.setAttribute('aria-label',recorded?'Excluir treino realizado':'Excluir agendamento');
+    $('editWorkoutSheet').hidden=!sheets.some(s=>s.id===workoutSheet);
+    $('changeWorkoutSheet').hidden=activeWorkout?.status!=='active'||!!Gym.stats(activeWorkout).steps;
     enhanceWorkoutDom();
     return result;
   };
@@ -142,27 +147,34 @@
     }
   },true);
 
-  deleteBtn.onclick=async()=>{
-    const session=sessions.find(s=>s.session_date===workoutDate);
-    if(!session)return;
+  $('editWorkoutSheet').onclick=()=>{if(workoutSheet)openSheet(workoutSheet)};
+
+  async function removeDayWorkout(ask=true){
+    if(deletingWorkout)return false;
+    if(savingWorkout||finishingWorkout){toast('Espere terminar de salvar e tente novamente.');return false;}
+    const date=workoutDate,session=sessions.find(s=>s.session_date===date);
     const label=activeWorkout?.name||'este treino';
-    if(!confirm(`Excluir ${label} de ${new Date(workoutDate+'T12:00').toLocaleDateString('pt-BR')}? As séries registradas neste treino serão apagadas. A ficha original continua intacta.`))return;
-    deleteBtn.disabled=true;
+    if(ask&&!confirm(`Excluir ${label} de ${new Date(date+'T12:00').toLocaleDateString('pt-BR')}? Ele sairá do calendário e da lista da semana. As séries desse dia serão apagadas. A ficha original será preservada.`))return false;
+    deletingWorkout=true;deleteBtn.disabled=true;clearTimeout(saveTimer);pendingSave=false;
     try{
-      const removed=await sb.from('gym_sessions').delete().eq('id',session.id).eq('user_id',user.id);
+      // Query by date as well: this includes sessions saved since the modal opened.
+      const removed=await sb.from('gym_sessions').delete().eq('session_date',date).eq('user_id',user.id);
       if(removed.error)throw removed.error;
-      const unplanned=await sb.from('gym_plans').delete().eq('user_id',user.id).eq('plan_date',workoutDate);
+      const unplanned=await sb.from('gym_plans').delete().eq('user_id',user.id).eq('plan_date',date);
       if(unplanned.error)throw unplanned.error;
-      try{localStorage.removeItem(`gica-gym-v3:${user.id}:${workoutDate}`);localStorage.removeItem(`gica-gym-v3:${user.id}:${workoutDate}:recovery`)}catch{}
-      close('sessionModal');
-      activeWorkout=null;activeRevision=0;workoutSheet=null;workoutTraining=null;
-      await load();
-      renderWeek();renderMetrics();renderHistory();
-      toast('Treino excluído. O dia está livre para você marcar a ficha certa.');
-    }catch(error){
-      console.error(error);
-      alert('Não consegui excluir esse treino. Nada mais foi alterado.');
-    }finally{deleteBtn.disabled=false}
+      try{localStorage.removeItem(`gica-gym-v3:${user.id}:${date}`);localStorage.removeItem(`gica-gym-v3:${user.id}:${date}:recovery`)}catch{}
+      close('sessionModal');activeWorkout=null;activeRevision=0;workoutSheet=null;workoutTraining=null;currentSheet=null;
+      await load();renderWeek();renderMetrics();renderHistory();
+      return true;
+    }catch(error){console.error(error);alert('Não consegui concluir a exclusão. Atualize a página e tente novamente.');return false;}
+    finally{deletingWorkout=false;deleteBtn.disabled=false;}
+  }
+  deleteBtn.onclick=async()=>{if(await removeDayWorkout())toast('Treino removido do calendário e da lista da semana.');};
+  $('changeWorkoutSheet').onclick=async()=>{
+    if(activeWorkout?.status!=='active'||Gym.stats(activeWorkout).steps)return;
+    const date=workoutDate;
+    if(!confirm('Trocar a ficha planejada para este dia?'))return;
+    if(await removeDayWorkout(false)){currentDate=date;openPicker();}
   };
 
   const saveExit=document.getElementById('unplan');

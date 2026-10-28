@@ -1,6 +1,6 @@
 /* Academia v3: routines, set-level logging, dropsets, supersets and recovery. */
 let activeWorkout=null,activeRevision=0,workoutDate=null,workoutSheet=null,workoutTraining=null;
-let saveTimer,savingWorkout=false,pendingSave=false,workoutConflict=false,editRoutine=null,saveState='',finishingWorkout=false,savingRoutine=false;
+let saveTimer,savingWorkout=false,pendingSave=false,workoutConflict=false,editRoutine=null,saveState='',finishingWorkout=false,savingRoutine=false,deletingWorkout=false;
 const clone=Gym.copy;
 const timeLabel=seconds=>`${Math.floor(Math.max(0,seconds)/60)}:${String(Math.floor(Math.max(0,seconds)%60)).padStart(2,'0')}`;
 const numericLabel=n=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(n);
@@ -19,7 +19,7 @@ function toast(message){let el=$('gymToast');el.textContent=message;el.hidden=fa
 function showLoadError(error){console.error(error);let box=$('gymLoadError');if(!box){box=document.createElement('div');box.id='gymLoadError';box.className='load-error';document.querySelector('.app').prepend(box)}box.innerHTML='<strong>Não consegui carregar seus treinos.</strong><p>Seus dados continuam guardados. Tente novamente quando a conexão voltar.</p><button class="soft" id="retryGymLoad">Tentar novamente</button>';$('retryGymLoad').onclick=()=>location.reload()}
 function keepDraft(){if(!activeWorkout)return;try{localStorage.setItem(draftKey(),JSON.stringify({workout:activeWorkout,revision:activeRevision,sheetId:workoutSheet,trainingId:workoutTraining,savedAt:Date.now()}));return true}catch{setSaveState('Sem espaço para guardar neste aparelho. Salve antes de sair.','error');return false}}
 function setSaveState(text,state=''){saveState=text;const el=$('workoutSaveState');if(el){el.textContent=text;el.dataset.state=state}}
-function changed(render=false){if(!activeWorkout)return;activeWorkout.modifiedAt=Date.now();keepDraft();if(!workoutConflict)setSaveState(window.GYM_DEMO?'Prévia · salva só neste navegador':'Salvo neste aparelho · sincronizando…');clearTimeout(saveTimer);saveTimer=setTimeout(()=>persistWorkout(),900);if(render)renderWorkout()}
+function changed(render=false){if(!activeWorkout||deletingWorkout)return;activeWorkout.modifiedAt=Date.now();keepDraft();if(!workoutConflict)setSaveState(window.GYM_DEMO?'Prévia · salva só neste navegador':'Salvo neste aparelho · sincronizando…');clearTimeout(saveTimer);saveTimer=setTimeout(()=>persistWorkout(),900);if(render)renderWorkout()}
 function flushWorkoutInputs(){
   if(activeWorkout?.status!=='active')return;
   $('sessionExercises').querySelectorAll('.set-line input[data-field]:not(:disabled)').forEach(input=>{
@@ -28,7 +28,7 @@ function flushWorkoutInputs(){
   });
 }
 async function persistWorkout(){
-  if(!activeWorkout||workoutConflict)return false;
+  if(!activeWorkout||workoutConflict||deletingWorkout)return false;
   flushWorkoutInputs();
   if(savingWorkout){pendingSave=true;return false}
   const invalid=Gym.validate(activeWorkout);if(invalid){setSaveState(invalid,'error');return false}
@@ -50,6 +50,7 @@ function chooseDraft(server){let draft;try{draft=JSON.parse(localStorage.getItem
   return server
 }
 openSession=function(){
+  if(deletingWorkout)return;
   if(savingWorkout){toast('Espere terminar de salvar o treino atual.');return}
   if(activeWorkout&&workoutDate!==currentDate&&saveState.includes('Sem sincronizar')){toast('Sincronize o treino atual antes de abrir outro dia.');return}
   workoutDate=currentDate;let server=sessions.find(s=>s.session_date===currentDate);const selected=chooseDraft(server);workoutSheet=selected?.sheet_id??currentSheet?.id??null;workoutTraining=selected?.training_id??currentSheet?.training_id??null;activeRevision=selected?.revision||0;workoutConflict=false;
@@ -126,16 +127,34 @@ function pickExercises(onPick){form('biblioteca','Adicionar exercícios',`<input
 
 openSheet=function(id){currentSheet=sheets.find(s=>s.id===id);if(!currentSheet)return;editRoutine=routineFor(currentSheet);editRoutine.name=currentSheet.name;renderRoutine();open('sheetModal')};
 function renderRoutine(){
-  const r=editRoutine;$('sheetTitle').innerHTML=`<input id="routineName" class="routine-name" aria-label="Nome da ficha" value="${esc(r.name)}">`;$('routineName').oninput=()=>r.name=$('routineName').value;
+  const r=editRoutine;$('sheetTitle').innerHTML=`<label class="routine-name-label"><small>Nome da ficha · toque para editar</small><input id="routineName" class="routine-name" aria-label="Nome da ficha" value="${esc(r.name)}"></label>`;$('routineName').oninput=()=>r.name=$('routineName').value;
   $('sheetExerciseList').innerHTML=`<p class="editor-hint">Configure cada série. Supersets alternam os exercícios e descansam só ao completar a rodada.</p>`+r.exercises.map((e,i)=>`<article class="routine-exercise" data-routine="${e.id}"><div class="routine-head"><div><small>EXERCÍCIO ${i+1}</small><h3>${esc(e.name)}</h3></div><div class="routine-order"><button data-edit="up" aria-label="Subir ${esc(e.name)}" ${i===0?'disabled':''}>↑</button><button data-edit="down" aria-label="Descer ${esc(e.name)}" ${i===r.exercises.length-1?'disabled':''}>↓</button><button data-edit="remove" aria-label="Remover ${esc(e.name)}">×</button></div></div><div class="routine-settings"><label>Descanso (seg)<input data-config="restSeconds" type="number" min="0" max="900" value="${e.restSeconds}"></label><label>Superset com<select data-config="supersetId"><option value="">Sem superset</option>${r.exercises.filter(x=>x!==e).map(x=>`<option value="${x.id}" ${e.supersetId&&e.supersetId===x.supersetId?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label></div><div class="routine-sets">${e.sets.map((s,si)=>`<div class="routine-set" data-routine-set="${s.id}"><b>${si+1}</b><select data-config="type" aria-label="Tipo série ${si+1}">${[['normal','Normal'],['warmup','Aquecimento'],['drop','Dropset'],['failure','Falha']].map(([v,n])=>`<option value="${v}" ${s.type===v?'selected':''}>${n}</option>`).join('')}</select><input data-config="targetReps" aria-label="Repetições série ${si+1}" value="${esc(s.targetReps)}" placeholder="8–12"><button data-edit="remove-set" aria-label="Remover série ${si+1}">×</button>${s.type==='drop'?`<label class="routine-drops">Reduções de carga <input data-config="dropCount" aria-label="Reduções série ${si+1}" type="number" min="1" max="8" value="${s.drops.length||1}"></label>`:''}</div>`).join('')}</div><button class="add-set" data-edit="add-set">+ Série</button></article>`).join('')+(r.exercises.length?'':'<div class="routine-empty">Sua ficha começa aqui.<br>Adicione os movimentos que você quer treinar.</div>');
   $('sheetExerciseList').querySelectorAll('[data-routine]').forEach(card=>{const e=r.exercises.find(e=>e.id===card.dataset.routine);card.querySelectorAll('[data-config]').forEach(input=>input.onchange=()=>{const s=e.sets.find(s=>s.id===input.closest('[data-routine-set]')?.dataset.routineSet);switch(input.dataset.config){case 'restSeconds':e.restSeconds=Math.min(900,Math.max(0,Number(input.value)||0));break;case 'supersetId':{const other=r.exercises.find(x=>x.id===input.value);if(other){const g=other.supersetId||Gym.id();e.supersetId=g;other.supersetId=g}else e.supersetId=null;Gym.normalizeGroups(r.exercises);break}case 'type':s.type=input.value;if(s.type==='drop'&&!s.drops.length)s.drops=[{id:Gym.id(),weight:null,reps:null,done:false}];if(s.type!=='drop')s.drops=[];break;case 'targetReps':s.targetReps=input.value;break;case 'dropCount':{const count=Math.min(8,Math.max(1,Number(input.value)||1));s.drops=Array.from({length:count},(_,i)=>s.drops[i]||{id:Gym.id(),weight:null,reps:null,done:false});break}}renderRoutine()});card.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const i=r.exercises.indexOf(e),s=e.sets.find(s=>s.id===b.closest('[data-routine-set]')?.dataset.routineSet);if(b.dataset.edit==='up'&&i>0)[r.exercises[i-1],r.exercises[i]]=[e,r.exercises[i-1]];if(b.dataset.edit==='down'&&i<r.exercises.length-1)[r.exercises[i],r.exercises[i+1]]=[r.exercises[i+1],e];if(b.dataset.edit==='remove'){r.exercises=r.exercises.filter(x=>x!==e);Gym.normalizeGroups(r.exercises)}if(b.dataset.edit==='add-set'&&e.sets.length<30)e.sets.push(Gym.set({targetReps:e.sets.at(-1)?.targetReps||'10'}));if(b.dataset.edit==='remove-set'&&e.sets.length>1)e.sets=e.sets.filter(x=>x!==s);renderRoutine()})});
   $('addCatalogExercise').onclick=()=>pickExercises(items=>{items.forEach(e=>r.exercises.push(Gym.exercise({exerciseId:e.id,name:e.name,imageUrl:e.image_url})));renderRoutine()});
-  let actions=$('routineActions');if(!actions){actions=document.createElement('div');actions.id='routineActions';actions.className='modal-actions routine-actions';$('addCatalogExercise').after(actions)}actions.innerHTML='<button id="duplicateRoutine" class="soft">Duplicar</button><button id="saveRoutine" class="primary">Salvar ficha</button>';$('saveRoutine').onclick=()=>saveRoutine();$('duplicateRoutine').onclick=()=>saveRoutine(true)
+  let actions=$('routineActions');if(!actions){actions=document.createElement('div');actions.id='routineActions';actions.className='modal-actions routine-actions';$('addCatalogExercise').after(actions)}actions.innerHTML='<button id="deleteRoutine" class="icon-btn danger-icon" aria-label="Excluir ficha" title="Excluir ficha"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="duplicateRoutine" class="soft">Duplicar</button><button id="saveRoutine" class="primary">Salvar ficha</button>';$('deleteRoutine').onclick=deleteRoutine;$('saveRoutine').onclick=()=>saveRoutine();$('duplicateRoutine').onclick=()=>saveRoutine(true)
+}
+async function deleteRoutine(){
+  if(savingRoutine||!currentSheet)return;
+  if(savingWorkout||deletingWorkout)return toast('Espere terminar de salvar o treino e tente novamente.');
+  const sheet=currentSheet;
+  if(!confirm(`Excluir a ficha ${sheet.name}? Ela sairá da lista de fichas e seus agendamentos serão removidos. O histórico realizado será preservado.`))return;
+  savingRoutine=true;deletingWorkout=true;clearTimeout(saveTimer);pendingSave=false;$('deleteRoutine').disabled=true;
+  try{
+    const {data,error}=await sb.from('gym_sheets').delete().eq('id',sheet.id).eq('user_id',user.id).select('id');
+    if(error)throw error;if(!data?.length)throw new Error('Ficha não encontrada para exclusão.');
+    // Preserve an ongoing workout snapshot when its original sheet is deleted.
+    if(workoutSheet===sheet.id){workoutSheet=null;if(!activeWorkout?.exercises.length){activeWorkout=null;workoutTraining=null;}}
+    for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(!k?.startsWith(`gica-gym-v3:${user.id}:`))continue;try{const draft=JSON.parse(localStorage.getItem(k));if(draft?.sheetId===sheet.id){draft.sheetId=null;localStorage.setItem(k,JSON.stringify(draft))}}catch{}}
+    close('sheetModal');currentSheet=null;editRoutine=null;await load();renderTrainings();
+    if(currentTraining&&trainings.some(t=>t.id===currentTraining.id))openTraining(currentTraining.id);
+    toast('Ficha excluída.');
+  }catch(error){console.error(error);toast('Não consegui excluir a ficha. Tente novamente.');}
+  finally{savingRoutine=false;deletingWorkout=false;if(activeWorkout?.status==='active')changed();if($('deleteRoutine'))$('deleteRoutine').disabled=false;}
 }
 async function saveRoutine(duplicate=false){
   if(savingRoutine)return;
-  const r=editRoutine;if(!r?.name.trim())return toast('Dê um nome à ficha.');if(!r.exercises.length)return toast('Adicione pelo menos um exercício.');if(r.exercises.some(e=>e.sets.some(s=>!s.targetReps.trim())))return toast('Preencha a meta de repetições.');const payload={name:r.name.trim()+(duplicate?' · cópia':''),routine_data:Gym.template(r)};const button=$(duplicate?'duplicateRoutine':'saveRoutine');savingRoutine=true;$('saveRoutine').disabled=true;$('duplicateRoutine').disabled=true;
-  try{const query=duplicate?sb.from('gym_sheets').insert({...payload,user_id:user.id,training_id:currentSheet.training_id,sort_order:sheets.filter(s=>s.training_id===currentSheet.training_id).length}):sb.from('gym_sheets').update(payload).eq('id',currentSheet.id).eq('user_id',user.id);const {data,error}=await query.select().single();if(error)throw error;await load();close('sheetModal');if(currentTraining)openTraining(currentTraining.id);toast(duplicate?'Ficha duplicada.':'Ficha salva. Mudanças valem para os próximos treinos.')}catch(error){console.error(error);toast('Não consegui salvar a ficha. Tente novamente.')}finally{savingRoutine=false;button.disabled=false;if($('saveRoutine'))$('saveRoutine').disabled=false;if($('duplicateRoutine'))$('duplicateRoutine').disabled=false}
+  const r=editRoutine;if(!r?.name.trim())return toast('Dê um nome à ficha.');if(r.exercises.some(e=>e.sets.some(s=>!s.targetReps.trim())))return toast('Preencha a meta de repetições.');const payload={name:r.name.trim()+(duplicate?' · cópia':''),routine_data:Gym.template(r)};const button=$(duplicate?'duplicateRoutine':'saveRoutine');savingRoutine=true;$('deleteRoutine').disabled=true;$('saveRoutine').disabled=true;$('duplicateRoutine').disabled=true;
+  try{const query=duplicate?sb.from('gym_sheets').insert({...payload,user_id:user.id,training_id:currentSheet.training_id,sort_order:sheets.filter(s=>s.training_id===currentSheet.training_id).length}):sb.from('gym_sheets').update(payload).eq('id',currentSheet.id).eq('user_id',user.id);const {data,error}=await query.select().single();if(error)throw error;await load();close('sheetModal');if(currentTraining)openTraining(currentTraining.id);toast(duplicate?'Ficha duplicada.':'Ficha salva. Mudanças valem para os próximos treinos.')}catch(error){console.error(error);toast('Não consegui salvar a ficha. Tente novamente.')}finally{savingRoutine=false;if($('deleteRoutine'))$('deleteRoutine').disabled=false;button.disabled=false;if($('saveRoutine'))$('saveRoutine').disabled=false;if($('duplicateRoutine'))$('duplicateRoutine').disabled=false}
 }
 function renderHistory(){const el=$('historyList');if(!el)return;el.innerHTML=sessions.slice().sort((a,b)=>b.session_date.localeCompare(a.session_date)).map(s=>{const w=s.workout_data,sh=sheets.find(x=>x.id===s.sheet_id),st=w?Gym.stats(w):null;return `<button class="history-card" data-history="${s.id}"><span class="history-date">${new Date(s.session_date+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</span><span><b>${esc(w?.name||sh?.name||'Treino anterior')}</b><small>${s.completed?'Concluído':'Em andamento'}${st?` · ${st.done} séries · ${numericLabel(st.volume)} kg`:''}</small></span><span>↗</span></button>`}).join('')||'<div class="routine-empty">Seu histórico vai aparecer aqui.<br>Cada série conta.</div>';el.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>{const s=sessions.find(s=>s.id===b.dataset.history);currentDate=s.session_date;currentSheet=sheets.find(sh=>sh.id===s.sheet_id)||null;openSession()})}
 const legacyStats=exerciseStats;
@@ -242,3 +261,4 @@ function bindSetSwipes(card,e){
     line.addEventListener('pointercancel',event=>{if(gesture?.id===event.pointerId){gesture=null;toggle(row,false)}});
   });
 }
+
