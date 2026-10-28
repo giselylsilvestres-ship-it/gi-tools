@@ -22,3 +22,8 @@ body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Text","S
 
 @media(max-width:700px){.week-summary-row{grid-template-columns:1fr auto}.summary-date{grid-column:1/-1}}
 @media(max-width:560px){.metric .metric-title{font-size:16px}.metric .metric-description{font-size:12px}.metric>strong{font-size:30px}.metric .metric-context{font-size:11px}.detail-card-head strong{font-size:16px}.detail-card-head small{font-size:12px}.balance-name{font-size:12px}.week-head h1,.section-head h1{font-size:32px}}
+
+/* Match Check-in's fully rounded header navigation. */
+.app-header .view-switch{padding:4px;border-radius:999px;background:var(--surface2)}
+.app-header .view-switch button{border-radius:999px;padding:8px 12px;min-height:0;font-size:13px;font-weight:400;box-shadow:none}
+.app-header .view-switch button.active{background:var(--surface);color:var(--text);box-shadow:none}
