@@ -1,16 +1,71 @@
 {
   "rewrites": [
-    { "source": "/gica-icon-black-cream-v2.png", "destination": "/apple-touch-icon-precomposed.png" },
-    { "source": "/gica-icon-black-cream-v1.png", "destination": "/apple-touch-icon-precomposed.png" },
-    { "source": "/apple-touch-icon.png", "destination": "/apple-touch-icon-precomposed.png" },
-    { "source": "/apple-touch-icon-v3.png", "destination": "/apple-touch-icon-precomposed.png" },
-    { "source": "/apple-touch-icon-gica-20261026.png", "destination": "/apple-touch-icon-precomposed.png" },
-    { "source": "/icon-512.png", "destination": "/apple-touch-icon-precomposed.png" },
-    { "source": "/api/apple-touch-icon-v4.png", "destination": "/apple-touch-icon-precomposed.png" }
+    {
+      "source": "/gica-icon-black-cream-v2.png",
+      "destination": "/icons/gica-home-v3-180.png"
+    },
+    {
+      "source": "/gica-icon-black-cream-v1.png",
+      "destination": "/icons/gica-home-v3-180.png"
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "destination": "/icons/gica-home-v3-180.png"
+    },
+    {
+      "source": "/apple-touch-icon-v3.png",
+      "destination": "/icons/gica-home-v3-180.png"
+    },
+    {
+      "source": "/apple-touch-icon-gica-20261026.png",
+      "destination": "/icons/gica-home-v3-180.png"
+    },
+    {
+      "source": "/icon-512.png",
+      "destination": "/icons/gica-home-v3-512.png"
+    },
+    {
+      "source": "/api/apple-touch-icon-v4.png",
+      "destination": "/icons/gica-home-v3-180.png"
+    }
   ],
   "headers": [
-    {"source":"/gica-icon-black-cream-v2.png","headers":[{"key":"Cache-Control","value":"public, max-age=0, must-revalidate"}]},
-    {"source":"/manifest-black-cream-v2.webmanifest","headers":[{"key":"Cache-Control","value":"public, max-age=0, must-revalidate"}]}
+    {
+      "source": "/gica-icon-black-cream-v2.png",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-black-cream-v2.webmanifest",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/icons/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-gica-home-v3.webmanifest",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
   ],
   "crons": [
     {
