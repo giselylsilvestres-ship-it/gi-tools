@@ -24,7 +24,7 @@
     const running=activeWorkout.status==='active'&&!!activeWorkout.startedAt;
     const label=running?'Pausar':activeWorkout.timerStarted?'Retomar':'Iniciar';
     btn.classList.toggle('running',running);btn.setAttribute('aria-label',label+' cronômetro');btn.title=label+' cronômetro';
-    btn.querySelector('.timer-label').textContent=label;btn.disabled=activeWorkout.status!=='active';
+    btn.querySelector('.timer-label').textContent=label;btn.hidden=!activeWorkout.timerStarted;btn.disabled=activeWorkout.status!=='active';
   }
   function toggleWorkoutTimer(){
     if(!activeWorkout||activeWorkout.status!=='active')return;

@@ -92,8 +92,8 @@ function renderWorkout(){
     card.querySelectorAll('[data-action]').forEach(btn=>btn.onclick=()=>workoutAction(btn.dataset.action,e,btn));
   });
   $('addWorkoutExercise')?.addEventListener('click',()=>pickExercises(items=>{if(w.activityOnly){w.activityOnly=false;w.exercises=[];}items.forEach(e=>w.exercises.push(Gym.exercise({exerciseId:e.id,name:e.name,imageUrl:e.image_url})));Gym.prefill(w,prefillHistory());changed(true)}));
-  $('saveSession').textContent=w.status==='finished'?'Editar registro':w.status==='legacy'?'Fechar histórico':w.activityOnly?'Marcar como feito':'Concluir treino';
-  $('saveSession').onclick=finishWorkout;$('sessionNotes').disabled=readonly;tickWorkout();
+  $('saveSession').textContent=w.status==='finished'?'Editar registro':w.status==='legacy'?'Fechar histórico':w.activityOnly?'Marcar como feito':!w.timerStarted?'Iniciar treino':'Concluir treino';
+  $('saveSession').onclick=()=>{if(w.status==='active'&&!w.activityOnly&&!w.timerStarted){Gym.toggleTimer(w);changed(true);return;}return finishWorkout();};$('sessionNotes').disabled=readonly;tickWorkout();
 }
 function workoutAction(action,e,btn){
   if(activeWorkout.status!=='active')return;let s=e.sets.find(s=>s.id===(btn.dataset.set||btn.closest('.set-line')?.dataset.set));

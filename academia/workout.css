@@ -88,3 +88,5 @@ button,input,select,textarea,a{touch-action:manipulation}
 #workoutTimerToggle svg{position:static;inset:auto;transform:none;flex:0 0 12px;width:12px;height:12px}
 #workoutTimerToggle:disabled{display:none}
 .workout-duration-row{flex-wrap:wrap;gap:6px}
+
+#workoutTimerToggle[hidden]{display:none!important}
