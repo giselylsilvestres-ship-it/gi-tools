@@ -10,7 +10,7 @@
   actions.className='session-head-actions';
   actions.innerHTML=`
     <button id="editWorkoutSheet" class="icon-btn" aria-label="Editar ficha" title="Editar ficha">✎</button>
-    <button id="changeWorkoutSheet" class="soft" aria-label="Trocar ficha">Trocar ficha</button>
+    <button id="changeWorkoutSheet" class="icon-btn" aria-label="Trocar ficha" title="Trocar ficha"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button id="deleteWorkoutRecord" class="icon-btn danger-icon session-record-action" aria-label="Excluir treino realizado" title="Excluir treino realizado" hidden>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>`;
@@ -172,9 +172,8 @@
   deleteBtn.onclick=async()=>{if(await removeDayWorkout())toast('Treino removido do calendário e da lista da semana.');};
   $('changeWorkoutSheet').onclick=async()=>{
     if(activeWorkout?.status!=='active'||Gym.stats(activeWorkout).steps)return;
-    const date=workoutDate;
-    if(!confirm('Trocar a ficha planejada para este dia?'))return;
-    if(await removeDayWorkout(false)){currentDate=date;openPicker();}
+    if(savingWorkout||finishingWorkout||deletingWorkout)return toast('Espere terminar de salvar e tente novamente.');
+    currentDate=workoutDate;openPicker();
   };
 
   const saveExit=document.getElementById('unplan');

@@ -73,3 +73,12 @@ button,input,select,textarea,a{touch-action:manipulation}
 
 /* Sheet actions stay visible on narrow screens, including empty sheets. */
 .routine-name-label{display:block}.routine-name-label small{display:block;font-size:11px;font-weight:400;color:var(--muted);margin-bottom:6px}.routine-actions{flex-wrap:wrap}.routine-actions #deleteRoutine{margin-right:auto;min-width:44px;min-height:44px}.session-head-actions{flex-wrap:wrap}
+
+/* Equal-size actions, without a wide text button squeezing the session title. */
+#sessionModal .modal-head{align-items:flex-start;gap:12px;flex-wrap:wrap}
+#sessionModal .modal-head>div:first-child{flex:1 1 160px;min-width:0}
+#sessionModal .session-head-actions{display:flex;flex:0 0 auto;gap:6px;flex-wrap:nowrap;align-items:center}
+#sessionModal .session-head-actions button{width:36px;height:36px;min-width:36px;min-height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;flex:0 0 36px}
+#sessionModal .session-head-actions button[hidden]{display:none}
+#sessionModal .session-head-actions svg{width:18px;height:18px}
+.activity-summary{padding:24px 0}.activity-summary h3{margin:0 0 8px}.activity-summary p{color:var(--muted);font-size:14px;line-height:1.6}

@@ -55,7 +55,8 @@
     })));
     return w;
   }
-  function validate(w){if(w.version!==3||!Array.isArray(w.exercises)||w.exercises.length>100)return 'Treino inválido.';if(!w.exercises.length)return 'Adicione pelo menos um exercício.';for(const e of w.exercises){if(!e.sets.length||e.sets.length>30)return 'Use entre 1 e 30 séries por exercício.';for(const s of e.sets){for(const step of steps(s))if(step.done&&!valid(step))return 'Confira os valores: carga de 0 a 10.000 kg e repetições inteiras de 1 a 1.000, ou deixe em branco.'}}return null}
+  function validate(w){if(w.version!==3||!Array.isArray(w.exercises)||w.exercises.length>100)return 'Treino inválido.';if(!w.exercises.length)return 'Adicione pelo menos um exercício.';for(const e of w.exercises){if((!e.sets.length&&!w.activityOnly)||e.sets.length>30)return 'Use entre 1 e 30 séries por exercício.';for(const s of e.sets){for(const step of steps(s))if(step.done&&!valid(step))return 'Confira os valores: carga de 0 a 10.000 kg e repetições inteiras de 1 a 1.000, ou deixe em branco.'}}return null}
   function template(w){const t=copy(w);t.exercises.forEach(e=>e.sets.forEach(s=>steps(s).forEach(x=>x.done=false)));return {version:3,name:t.name,exercises:t.exercises}}
   return {copy,id,number,set,exercise,steps,done,valid,stats,normalizeGroups,next,fromLinks,fromLegacy,previousValue,suggestedReps,prefill,setWeight,start,validate,template};
 });
+

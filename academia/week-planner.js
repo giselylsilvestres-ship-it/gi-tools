@@ -73,13 +73,27 @@
     openPicker();
   }
 
+  let choosingSheet=false;
   async function chooseSheet(sheetId){
-    if(sessions.some(s=>s.session_date===currentDate)){
-      alert('Já há um treino registrado neste dia. Abra o registro existente para preservar suas séries.');return;
-    }
-    const result=await sb.from('gym_plans').upsert({user_id:user.id,plan_date:currentDate,sheet_id:sheetId},{onConflict:'user_id,plan_date'});
-    if(result.error){console.error(result.error);alert('Não consegui planejar. Tente novamente.');return}
-    close('sheetPicker');await load();currentSheet=sheets.find(x=>x.id===sheetId);openSession();
+    if(choosingSheet||savingWorkout||finishingWorkout||deletingWorkout){toast('Espere terminar de salvar e tente novamente.');return;}
+    const sheet=sheets.find(s=>s.id===sheetId);if(!sheet)return;
+    const date=currentDate,existing=sessions.find(s=>s.session_date===date);
+    if(existing?.completed||(existing?.workout_data&&Gym.stats(existing.workout_data).steps))return toast('Este dia já tem séries registradas. Edite o treino existente para preservá-las.');
+    if(sheetId===(existing?.sheet_id||plans.find(p=>p.plan_date===date)?.sheet_id))return close('sheetPicker');
+    const candidate=Gym.start(routineFor(sheet));candidate.name=sheet.name;
+    if(!candidate.exercises.length){candidate.activityOnly=true;candidate.exercises=[Gym.exercise({name:sheet.name,sets:[]})];}
+    // Replacement happens in one database transaction, only after selecting a sheet.
+    choosingSheet=true;deletingWorkout=true;clearTimeout(saveTimer);pendingSave=false;
+    try{
+      const {data,error}=await sb.rpc('gym_swap_planned_sheet',{p_date:date,p_sheet_id:sheetId,p_workout:candidate,p_revision:existing?.revision||0});
+      if(error)throw error;
+      const i=sessions.findIndex(s=>s.session_date===date);if(i<0)sessions.push(data);else sessions[i]=data;
+      const plan=plans.find(p=>p.plan_date===date);if(plan)plan.sheet_id=sheetId;else plans.push({plan_date:date,sheet_id:sheetId});
+      try{localStorage.removeItem(`gica-gym-v3:${user.id}:${date}`);localStorage.removeItem(`gica-gym-v3:${user.id}:${date}:recovery`);}catch{}
+      close('sheetPicker');close('sessionModal');activeWorkout=null;activeRevision=0;currentSheet=sheet;
+      deletingWorkout=false;openSession();renderWeek();renderHistory();
+    }catch(error){console.error(error);toast('Não consegui trocar a ficha. O agendamento anterior foi mantido.');}
+    finally{choosingSheet=false;deletingWorkout=false;}
   }
 
   function startFreeForSelectedDate(){
@@ -102,7 +116,8 @@
       const count=sheets.filter(s=>s.training_id===t.id).length;
       return `<button class="option" data-training-pick="${t.id}"><strong>${esc(t.name.toLowerCase())}</strong><small>${count} ficha${count===1?'':'s'} ›</small></button>`;
     }).join('');
-    $('sheetOptions').innerHTML=trainingOptions+`<button class="option free-workout-option" data-free-workout><strong>treino livre</strong><small>escolher exercícios avulsos</small></button>`;
+    const canStartFree=!plans.some(p=>p.plan_date===currentDate)&&!sessions.some(s=>s.session_date===currentDate);
+    $('sheetOptions').innerHTML=trainingOptions+(canStartFree?`<button class="option free-workout-option" data-free-workout><strong>treino livre</strong><small>escolher exercícios avulsos</small></button>`:'');
     $('sheetOptions').querySelectorAll('[data-training-pick]').forEach(b=>b.onclick=()=>showSheetStage(b.dataset.trainingPick));
     $('sheetOptions').querySelector('[data-free-workout]')?.addEventListener('click',startFreeForSelectedDate);
   }
@@ -122,3 +137,4 @@
 
   setTimeout(()=>renderWeek(),0);
 })();
+
