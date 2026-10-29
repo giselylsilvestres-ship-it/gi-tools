@@ -32,7 +32,6 @@
   el('waScatterChart').innerHTML=chartFrame(yr,[0,1,2,3,4].map(i=>({x:46+i/4*528,label:fmt(xr.min+(xr.max-xr.min)*i/4,1)})),'Nota','Tempo de escrita (min)',points);bindChartDetails('waScatterChart');
  }
  function renderTimeline(data){
-  text('waHistorySubtitle','Média das notas de cada dia · dias com escrita igualmente espaçados');
   if(!data.timeline.length)return empty('waHistoryChart','O histórico de notas aparecerá após as primeiras avaliações.');
   const rows=data.timeline,yr=bounds(rows.map(p=>p.value));
   const pts=rows.map((p,i)=>({...p,x:rows.length>1?46+i/(rows.length-1)*528:310,y:212-(p.value-yr.min)/(yr.max-yr.min)*192}));
@@ -63,7 +62,6 @@
   text('waAverage',data.recentMean===null?'—':fmt(data.recentMean));text('waOverall',data.overallMean===null?'Ainda sem notas':`Média geral · ${fmt(data.overallMean)}`);
   const diff=data.comparison,comparison=el('waComparison');comparison.className='wa-comparison';
   if(diff===null)comparison.textContent='Sem comparação disponível';else if(Math.abs(diff)<0.05)comparison.textContent='→ Na média geral';else{comparison.textContent=`${diff>0?'↑':'↓'} ${fmt(Math.abs(diff))} ${Math.abs(diff)===1?'ponto':'pontos'} vs. geral`;comparison.classList.add(diff>0?'positive':'negative');}
-  text('waGradeCount',`${data.gradedCount} escrita${data.gradedCount===1?' avaliada':'s avaliadas'} no histórico`);
   renderTypes(data);renderScatter(data);renderTimeline(data);renderComments(data);
  };
  let refreshing=false;

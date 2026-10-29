@@ -31,3 +31,6 @@ html[data-theme="light"] .wa-comparison.positive,html[data-theme="light"] .wa-gr
 
 .wa-bar-row{grid-template-columns:minmax(80px,112px) minmax(35px,1fr) 20px 30px 35px;gap:7px}.wa-type-average{font-size:13px;font-weight:650;text-align:right;color:var(--wa-master);font-variant-numeric:tabular-nums}.wa-type-average small{display:block;font-size:10px;font-weight:400;color:var(--muted)}
 @media(min-width:561px) and (max-width:1000px){.wa-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Preserve the SVG aspect ratio at the full card width, including iPad. */
+#waHistoryChart svg{max-height:none;aspect-ratio:600 / 260;flex-shrink:0}

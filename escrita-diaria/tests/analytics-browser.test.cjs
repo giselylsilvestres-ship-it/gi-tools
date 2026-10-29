@@ -21,6 +21,13 @@ const {chromium}=require('playwright');const fs=require('fs');const assert=requi
  assert(geometry.path.includes('C '));const step=geometry.xs[1]-geometry.xs[0];assert(geometry.xs.slice(1).every((x,i)=>Math.abs(x-geometry.xs[i]-step)<1e-6));
  await page.locator('#waComments summary').first().click();assert(await page.locator('#waComments details').first().getAttribute('open')!==null);await page.locator('#waExpandAll').click();assert.equal(await page.locator('#waComments details[open]').count(),21);await page.locator('#waExpandAll').click();assert.equal(await page.locator('#waComments details[open]').count(),0);
  await page.locator('#waScatterChart circle').last().click();assert(await page.locator('#waScatterChart .wa-chart-caption').isVisible());await page.screenshot({path:'/tmp/writing-analyses-desktop.png',fullPage:true});
+ for(const viewport of [{width:1194,height:834},{width:834,height:1194}]){
+  await page.setViewportSize(viewport);
+  const fit=await page.locator('#waHistoryChart svg').evaluate(svg=>{const r=svg.getBoundingClientRect(),p=svg.parentElement.getBoundingClientRect();return {width:r.width,parent:p.width,height:r.height,ratio:r.width/r.height};});
+  assert(Math.abs(fit.width-fit.parent)<1);assert(Math.abs(fit.ratio-600/260)<.01);
+  assert.equal(await page.locator('#waHistorySubtitle,#waGradeCount').count(),0);
+  await page.screenshot({path:`/tmp/writing-ipad-${viewport.width}.png`,fullPage:true});
+ }
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/tmp/writing-analyses-mobile.png',fullPage:true});
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.evaluate(()=>document.documentElement.dataset.theme='dark');await page.screenshot({path:'/tmp/writing-analyses-dark-mobile.png',fullPage:true});
  await page.locator('[data-nav="history"]').click();assert(await page.locator('#view-history').evaluate(e=>e.classList.contains('active')));
