@@ -13,6 +13,12 @@ const {chromium}=require('playwright');const fs=require('fs');const assert=requi
  for(const p of ['analytics-core.js','app.js','analytics.js'])await page.addScriptTag({content:fs.readFileSync(root+p,'utf8')});
  await page.locator('[data-nav="analyses"]').click();await page.waitForFunction(()=>document.getElementById('waTotal').textContent==='22');
  assert.equal(await page.locator('#view-analyses.active').count(),1);assert.equal(await page.locator('#waComments details').count(),21);assert.equal(await page.locator('#waScatterChart circle').count(),21);assert.equal(await page.locator('#waHistoryChart circle').count(),21);
+ assert.equal(await page.locator('#waUniqueDays').textContent(),'textos em 22 dias únicos');
+ assert.equal(await page.locator('#waWordsPerMinute').textContent(),'11,0');
+ assert.equal(await page.locator('#waTypeChart .wa-type-average').count(),5);
+ assert((await page.locator('#waFrequencyComparison').textContent()).includes('vs. geral'));
+ const geometry=await page.locator('#waHistoryChart').evaluate(el=>({path:el.querySelector('path[stroke]').getAttribute('d'),xs:[...el.querySelectorAll('circle')].map(c=>Number(c.getAttribute('cx')))}));
+ assert(geometry.path.includes('C '));const step=geometry.xs[1]-geometry.xs[0];assert(geometry.xs.slice(1).every((x,i)=>Math.abs(x-geometry.xs[i]-step)<1e-6));
  await page.locator('#waComments summary').first().click();assert(await page.locator('#waComments details').first().getAttribute('open')!==null);await page.locator('#waExpandAll').click();assert.equal(await page.locator('#waComments details[open]').count(),21);await page.locator('#waExpandAll').click();assert.equal(await page.locator('#waComments details[open]').count(),0);
  await page.locator('#waScatterChart circle').last().click();assert(await page.locator('#waScatterChart .wa-chart-caption').isVisible());await page.screenshot({path:'/tmp/writing-analyses-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/tmp/writing-analyses-mobile.png',fullPage:true});

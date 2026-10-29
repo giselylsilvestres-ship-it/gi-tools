@@ -14,7 +14,7 @@
   <script src="../gi-profile.js"></script>
   <script src="../gi-auth-guard.js?v=202610280000"></script>
   <script src="./supabase-config.js"></script>
-<link rel="manifest" href="/manifest-gica-home-v3.webmanifest"><link rel="apple-touch-icon" sizes="152x152" href="/icons/gica-home-v3-152.png"><link rel="apple-touch-icon" sizes="167x167" href="/icons/gica-home-v3-167.png"><link rel="apple-touch-icon" sizes="180x180" href="/icons/gica-home-v3-180.png"><link rel="icon" type="image/png" href="/icons/gica-home-v3-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Gica Tools">  <link rel="stylesheet" href="./analytics.css?v=20261029">
+<link rel="manifest" href="/manifest-gica-home-v3.webmanifest"><link rel="apple-touch-icon" sizes="152x152" href="/icons/gica-home-v3-152.png"><link rel="apple-touch-icon" sizes="167x167" href="/icons/gica-home-v3-167.png"><link rel="apple-touch-icon" sizes="180x180" href="/icons/gica-home-v3-180.png"><link rel="icon" type="image/png" href="/icons/gica-home-v3-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Gica Tools">  <link rel="stylesheet" href="./analytics.css?v=20261029-refined">
 </head>
 <body>
   <div class="app"><div class="shell">
@@ -29,9 +29,10 @@
         <header class="wa-header"><h1 id="waTitle">Sua escrita, ao longo do tempo.</h1><p>Frequência, notas e os caminhos que seus textos percorrem.</p></header>
         <p id="waStatus" class="wa-status" role="status" hidden></p>
         <div class="wa-metrics">
-          <article class="wa-metric"><h2>Escritas</h2><p>até agora</p><strong id="waTotal">—</strong><small>sessões salvas desde o início</small></article>
-          <article class="wa-metric"><h2>Frequência</h2><p>semanal · últimos 30 dias</p><strong id="waFrequency">—</strong><small id="waFrequencyContext">dias com escrita</small></article>
+          <article class="wa-metric"><h2>Escritas</h2><p>até agora</p><strong id="waTotal">—</strong><small id="waUniqueDays">textos em dias únicos</small></article>
+          <article class="wa-metric"><h2>Frequência</h2><p>semanal · últimos 30 dias</p><strong id="waFrequency">—</strong><small id="waFrequencyContext">dias com escrita</small><small id="waFrequencyOverall"></small><span id="waFrequencyComparison" class="wa-comparison"></span></article>
           <article class="wa-metric"><h2>Nota média</h2><p>últimos 30 dias</p><strong id="waAverage">—</strong><small id="waOverall">média geral</small><span id="waComparison" class="wa-comparison"></span></article>
+          <article class="wa-metric"><h2>Palavras por minuto</h2><p>todo o histórico</p><strong id="waWordsPerMinute">—</strong><small id="waWordTotals">palavras / minutos</small></article>
         </div>
         <div class="wa-chart-grid">
           <article class="wa-card"><header class="wa-card-head"><h2>Tipos de escrita</h2><p id="waTypeSubtitle">Todo o histórico</p></header><div id="waTypeChart" class="wa-bars"></div></article>
@@ -42,9 +43,9 @@
       </section>
     </main>
   </div></div>
-  <script src="./analytics-core.js?v=20261029"></script>
+  <script src="./analytics-core.js?v=20261029-refined"></script>
   <script src="./app.js?v=analyses-20261029"></script>
   <script src="./challenges.js?v=categories-only-20261029"></script>
-  <script src="./analytics.js?v=20261029"></script>
+  <script src="./analytics.js?v=20261029-refined"></script>
 </body>
 </html>

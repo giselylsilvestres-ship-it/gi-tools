@@ -11,3 +11,8 @@ test('zero grade, multiple texts same day, decimal durations, comments newest fi
  assert.equal(s.overallMean,16/3);assert.equal(s.scatter.length,2);assert.equal(s.scatter[0].x,10);assert.equal(s.timeline.length,2);assert.equal(s.timeline[1].value,8);assert.equal(s.timeline[1].count,2);assert.equal(s.types.find(t=>t.name==='Sem classificação').value,1);assert.equal(s.comments.length,2);assert.equal(s.comments[0].createdAt,'2026-10-28T16:00Z');
 });
 test('empty and single-point cases',()=>{const e=summarize([],now);assert.equal(e.total,0);assert.equal(e.recentMean,null);assert.equal(e.comparison,null);assert.equal(e.weeklyFrequency,0);const s=summarize([row('2026-10-28',5)],now);assert.equal(s.timeline.length,1);assert.equal(s.comparison,0);});
+test('lifetime unique days, calendar frequency, weighted writing pace and category averages',()=>{
+ const s=summarize([row('2026-10-20T12:00Z',6,{words:100,durationSeconds:600}),row('2026-10-20T14:00Z',null,{words:300,durationSeconds:1200}),row('2026-10-29T12:00Z',8,{words:200,durationSeconds:600})],now);
+ assert.equal(s.uniqueDays,2);assert(Math.abs(s.overallFrequency-1.4)<1e-10);assert.equal(s.totalWords,600);assert.equal(s.totalMinutes,40);assert.equal(s.wordsPerMinute,15);assert.equal(s.types[0].average,7);assert.equal(s.types[0].value,3);
+ const z=summarize([row('2026-10-29T12:00Z',null,{words:100,durationSeconds:0})],now);assert.equal(z.wordsPerMinute,null);assert.equal(z.types[0].average,null);
+});

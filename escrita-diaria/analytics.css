@@ -3,7 +3,7 @@
 .writing-analytics{--wa-master:#DCCD8A;--wa-pear:#A7993C;--wa-mozart:#475480;--wa-sunburn:#B57056;--wa-copper:#7F3B25;padding-top:6px}
 .wa-header{margin:0 0 28px}.wa-header h1{font-size:clamp(32px,5vw,44px);margin-bottom:10px}.wa-header p{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
 .wa-status{color:var(--muted);font-size:13px;margin:0 0 16px}.wa-status[hidden]{display:none}
-.wa-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:24px}
+.wa-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:24px}
 .wa-metric{min-height:174px;padding:20px;border:1px solid var(--border);border-radius:18px;background:var(--surface);display:flex;flex-direction:column;gap:5px;min-width:0}
 .wa-metric h2{font-size:17px;font-weight:650;line-height:1.2;letter-spacing:-.015em;margin:0}.wa-metric p{font-size:13px;line-height:1.45;color:var(--muted);margin:0}
 .wa-metric>strong{font-size:31px;font-weight:650;line-height:1.05;letter-spacing:-.04em;margin:15px 0 4px;font-variant-numeric:tabular-nums}
@@ -21,10 +21,13 @@
 .wa-comments{display:grid;gap:12px}.wa-comment{border:1px solid var(--border);border-radius:18px;background:var(--surface);overflow:hidden}.wa-comment summary{list-style:none;cursor:pointer;padding:18px 20px}.wa-comment summary::-webkit-details-marker{display:none}.wa-comment-meta{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:10px}.wa-comment-heading{display:flex;align-items:center;gap:12px}.wa-comment-heading>strong{flex:1;min-width:0;font-size:16px;font-weight:620;line-height:1.45}.wa-grade{font-size:14px;font-weight:650;white-space:nowrap;color:var(--wa-pear);font-variant-numeric:tabular-nums}.wa-chevron{font-size:18px;color:var(--muted);transition:transform .2s}.wa-comment[open] .wa-chevron{transform:rotate(180deg)}.wa-comment-body{padding:20px;border-top:1px solid var(--border);white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.75}
 .writing-analytics button:focus-visible,.wa-comment summary:focus-visible{outline:2px solid var(--wa-pear);outline-offset:3px}
 @media(max-width:800px){.wa-card-wide .wa-axis{font-size:18px}.wa-chart-grid{grid-template-columns:1fr}.wa-card-wide{grid-column:auto}.wa-card{min-height:280px}.wa-chart svg{max-height:280px}.wa-card-wide .wa-chart svg{max-height:280px}}
-@media(max-width:560px){.topbar:has([data-nav="analyses"]){flex-wrap:wrap;gap:12px}.topbar:has([data-nav="analyses"]) .top-actions{margin-left:0;width:100%;justify-content:space-between}.wa-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.wa-metric{padding:17px;min-height:164px}.wa-metric:last-child{grid-column:1/-1}.wa-metric h2{font-size:16px}.wa-metric>strong{font-size:30px}.wa-card{padding:17px}.wa-card-head h2{font-size:16px}.wa-bar-row{gap:7px;grid-template-columns:minmax(85px,112px) minmax(50px,1fr) 22px 32px;font-size:12px}.wa-comment summary,.wa-comment-body{padding:16px}.wa-comment-heading>strong{font-size:15px}.wa-header{margin-bottom:22px}}
+@media(max-width:560px){.topbar:has([data-nav="analyses"]){flex-wrap:wrap;gap:12px}.topbar:has([data-nav="analyses"]) .top-actions{margin-left:0;width:100%;justify-content:space-between}.wa-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.wa-metric{padding:17px;min-height:164px}.wa-metric h2{font-size:16px}.wa-metric>strong{font-size:30px}.wa-card{padding:17px}.wa-card-head h2{font-size:16px}.wa-bar-row{gap:7px;grid-template-columns:minmax(85px,112px) minmax(50px,1fr) 22px 32px;font-size:12px}.wa-comment summary,.wa-comment-body{padding:16px}.wa-comment-heading>strong{font-size:15px}.wa-header{margin-bottom:22px}}
 
 html[data-theme="light"] .wa-comparison.positive,html[data-theme="light"] .wa-grade{color:#6d6429}
 
 .wa-chart-caption{align-self:stretch;font-size:12px;line-height:1.5;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}.wa-chart-caption[hidden]{display:none}
 
 .wa-chart-caption{white-space:pre-line}
+
+.wa-bar-row{grid-template-columns:minmax(80px,112px) minmax(35px,1fr) 20px 30px 35px;gap:7px}.wa-type-average{font-size:13px;font-weight:650;text-align:right;color:var(--wa-master);font-variant-numeric:tabular-nums}.wa-type-average small{display:block;font-size:10px;font-weight:400;color:var(--muted)}
+@media(min-width:561px) and (max-width:1000px){.wa-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
