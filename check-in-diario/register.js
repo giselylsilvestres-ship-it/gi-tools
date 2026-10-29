@@ -8,7 +8,7 @@ const moods=['radiante','de boa','meh','tristinha','terrível'];
 // Low-set features and rounded strokes keep the five moods legible at small sizes.
 const face=(i)=>{
  const expressions=[
-  '<path d="M8 27q3-2 5 1M35 28q2-3 5-1"/><path d="M16 31h16c-1 10-15 10-16 0Z" fill="var(--face-ink,#202b2b)"/><path d="M19 36q5-3 10 0" stroke="currentColor" stroke-width="2.5"/>',
+  '<path d="M8.5 26.5q2.5-2 5 1M34.5 27.5q2.5-3 5-1"/><path d="M17 30.5h14c1 0 1.5.8 1.1 1.8-2.8 9-13.4 9-16.2 0-.4-1 .1-1.8 1.1-1.8Z" fill="#202b2b" stroke="none"/><path d="M19 36q5-2.5 10 0-5 4.5-10 0Z" fill="currentColor" stroke="none"/>',
   '<circle cx="12" cy="28" r="2.3" fill="var(--face-ink,#202b2b)" stroke="none"/><circle cx="36" cy="28" r="2.3" fill="var(--face-ink,#202b2b)" stroke="none"/><path d="M20 32q4 4 8 0"/>',
   '<circle cx="12" cy="28" r="2.3" fill="var(--face-ink,#202b2b)" stroke="none"/><circle cx="36" cy="28" r="2.3" fill="var(--face-ink,#202b2b)" stroke="none"/><path d="M18.5 32.5h11"/>',
   '<path d="M9 20q2-2.5 4-1M35 19q2-1.5 4 1"/><circle cx="12" cy="28" r="2.3" fill="var(--face-ink,#202b2b)" stroke="none"/><circle cx="36" cy="28" r="2.3" fill="var(--face-ink,#202b2b)" stroke="none"/><path d="M18 36c0-8 12-8 12 0"/>',

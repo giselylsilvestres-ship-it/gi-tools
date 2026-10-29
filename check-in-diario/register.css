@@ -35,7 +35,7 @@ html #modal #save[hidden]{display:none!important}
 .mood-faces{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:26px 0 36px}
 .mood-faces button{border:0;background:transparent;padding:8px 0;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:10px;line-height:1.3}
 .mood-faces svg{width:48px;height:48px;transition:transform .15s}
-.mood-faces button:nth-child(1) svg{color:#DCCD8A}.mood-faces button:nth-child(2) svg{color:#A7993C}.mood-faces button:nth-child(3) svg{color:#475480;--face-ink:#fff}.mood-faces button:nth-child(4) svg{color:#B57056}.mood-faces button:nth-child(5) svg{color:#7F3B25;--face-ink:#fff}
+.mood-faces button:nth-child(1) svg{color:#DCCD8A}.mood-faces button:nth-child(2) svg{color:#A7993C}.mood-faces button:nth-child(3) svg{color:#475480;--face-ink:#202b2b}.mood-faces button:nth-child(4) svg{color:#B57056}.mood-faces button:nth-child(5) svg{color:#7F3B25;--face-ink:#202b2b}
 .mood-faces button.selected{background:var(--surface2);color:var(--text);font-weight:650;outline:1px solid var(--border)}
 .mood-faces button.selected svg{transform:scale(1.08)}
 .habit-pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 10px;padding:20px 12px;border:1px solid var(--border);border-radius:20px}
