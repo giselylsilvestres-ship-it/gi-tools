@@ -90,3 +90,7 @@ button,input,select,textarea,a{touch-action:manipulation}
 .workout-duration-row{flex-wrap:wrap;gap:6px}
 
 #workoutTimerToggle[hidden]{display:none!important}
+
+/* Compact circular pause/resume; accessible name remains on the button. */
+#workoutTimerToggle{width:30px;height:30px;min-width:30px;min-height:30px;padding:0;border-radius:50%;flex:0 0 30px;gap:0}
+#workoutTimerToggle .timer-label{display:none}
