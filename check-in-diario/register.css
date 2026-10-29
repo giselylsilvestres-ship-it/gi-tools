@@ -29,3 +29,22 @@ html #modal #save[hidden]{display:none!important}
  .app-header .view-switch button,.app-header #registerEntry{flex:1;min-width:0;font-size:14px;font-weight:500;padding:10px 6px;line-height:1.3;white-space:nowrap}
  .app-header .theme{flex:0 0 32px;width:32px}.mind-pairs{grid-template-columns:1fr}
 }
+
+/* Simple Daylio-inspired choices, with Gica's original palette and typography. */
+.registration h3{margin-top:30px;margin-bottom:18px}
+.mood-faces{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:26px 0 36px}
+.mood-faces button{border:0;background:transparent;padding:8px 0;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:10px;line-height:1.3}
+.mood-faces svg{width:48px;height:48px;transition:transform .15s}
+.mood-faces button:nth-child(1) svg{color:#DCCD8A}.mood-faces button:nth-child(2) svg{color:#A7993C}.mood-faces button:nth-child(3) svg{color:#475480;--face-ink:#fff}.mood-faces button:nth-child(4) svg{color:#B57056}.mood-faces button:nth-child(5) svg{color:#7F3B25;--face-ink:#fff}
+.mood-faces button.selected{background:var(--surface2);color:var(--text);font-weight:650;outline:1px solid var(--border)}
+.mood-faces button.selected svg{transform:scale(1.08)}
+.habit-pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 10px;padding:20px 12px;border:1px solid var(--border);border-radius:20px}
+.habit-pills button{display:flex;flex-direction:column;align-items:center;gap:8px;border:0;padding:0;background:transparent!important;color:var(--muted)!important;font-size:14px;font-weight:500}
+.habit-pills i{font-style:normal;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);font-size:25px;color:var(--text)}
+.habit-pills button.selected{color:var(--text)!important}
+.habit-pills button.selected i{background:#DCCD8A;color:#111;border-color:#DCCD8A}
+.habit-pills button:nth-child(3n+2).selected i{background:#475480;color:#fff;border-color:#475480}
+.habit-pills button:nth-child(3n).selected i{background:#B57056;color:#111;border-color:#B57056}
+.registration-card .field label{font-size:15px}
+#modal .registration-card{max-width:600px}
+@media(max-width:380px){.mood-faces{gap:4px}.mood-faces svg{width:42px;height:42px}.mood-faces button{font-size:11px}}
