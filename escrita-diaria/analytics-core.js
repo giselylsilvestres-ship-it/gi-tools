@@ -16,8 +16,8 @@
   for(const r of rows){const type=String(r.writingType||'').trim()||'Sem classificação';if(!types.has(type))types.set(type,{count:0,grades:[]});const bucket=types.get(type);bucket.count++;if(r.grade!==null)bucket.grades.push(r.grade);if(r.grade!==null){if(!dates.has(r.day))dates.set(r.day,[]);dates.get(r.day).push(r.grade);}}
   return {uniqueDays,overallFrequency,frequencyComparison:overallFrequency===null?null:activeDays/30*7-overallFrequency,totalWords,totalMinutes,wordsPerMinute:totalMinutes?totalWords/totalMinutes:null,rows,total:rows.length,recentCount:recent.length,activeDays,weeklyFrequency:activeDays/30*7,recentMean,overallMean:overall,recentGradedCount:recentGraded.length,gradedCount:graded.length,comparison:recentMean===null||overall===null?null:recentMean-overall,
    types:[...types].map(([name,value])=>({name,value:value.count,average:mean(value.grades)})).sort((a,b)=>b.value-a.value||a.name.localeCompare(b.name,'pt-BR')),
-   scatter:graded.filter(r=>r.minutes>0).map(r=>({x:r.minutes,y:r.grade,row:r})),
-   timeline:[...dates].sort(([a],[b])=>a.localeCompare(b)).map(([date,grades])=>({date,value:mean(grades),count:grades.length})),
+   scatter:graded.filter(r=>r.minutes>0&&number(r.words)!==null&&number(r.words)>=0).map(r=>({x:Number(r.words)/r.minutes,y:r.grade,row:r})),
+   timeline:[...graded].reverse().map(r=>({date:r.day,value:r.grade,row:r})),
    comments:rows.filter(r=>String(r.analysis||'').trim())};
  }
  return {number,day,summarize};

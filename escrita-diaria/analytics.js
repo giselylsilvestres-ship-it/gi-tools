@@ -25,11 +25,11 @@
   target.querySelectorAll('.wa-point').forEach(point=>{const show=()=>{const same=[...target.querySelectorAll('.wa-point')].filter(p=>p.getAttribute('cx')===point.getAttribute('cx')&&p.getAttribute('cy')===point.getAttribute('cy'));caption.textContent=same.map(p=>p.querySelector('title').textContent).join('\n');caption.hidden=false;};point.addEventListener('click',show);point.addEventListener('focus',show);});
  }
  function renderScatter(data){
-  text('waScatterSubtitle',`${data.scatter.length} escritas com nota e duração · todo o histórico`);
-  if(!data.scatter.length)return empty('waScatterChart','As escritas com nota e duração aparecerão aqui.');
+  text('waScatterSubtitle',`${data.scatter.length} escritas com nota, palavras e duração · todo o histórico`);
+  if(!data.scatter.length)return empty('waScatterChart','As escritas com nota, palavras e duração aparecerão aqui.');
   const xr=bounds(data.scatter.map(p=>p.x)),yr=bounds(data.scatter.map(p=>p.y));
-  const points=data.scatter.map(p=>{const x=46+(p.x-xr.min)/(xr.max-xr.min)*528,y=212-(p.y-yr.min)/(yr.max-yr.min)*192;const title=`${fullDate(p.row.createdAt)} · ${p.row.writingType||'Sem classificação'} · ${fmt(p.x)} min · nota ${fmt(p.y)}`;return `<circle class="wa-point" tabindex="0" cx="${x}" cy="${y}" r="5" fill="#A7993C" stroke="var(--surface)" stroke-width="1.5" aria-label="${esc(title)}"><title>${esc(title)}</title></circle>`;}).join('');
-  el('waScatterChart').innerHTML=chartFrame(yr,[0,1,2,3,4].map(i=>({x:46+i/4*528,label:fmt(xr.min+(xr.max-xr.min)*i/4,1)})),'Nota','Tempo de escrita (min)',points);bindChartDetails('waScatterChart');
+  const points=data.scatter.map(p=>{const x=46+(p.x-xr.min)/(xr.max-xr.min)*528,y=212-(p.y-yr.min)/(yr.max-yr.min)*192;const title=`${fullDate(p.row.createdAt)} · ${p.row.writingType||'Sem classificação'} · ${fmt(p.x)} palavras/min · nota ${fmt(p.y)}`;return `<circle class="wa-point" tabindex="0" cx="${x}" cy="${y}" r="5" fill="#A7993C" stroke="var(--surface)" stroke-width="1.5" aria-label="${esc(title)}"><title>${esc(title)}</title></circle>`;}).join('');
+  el('waScatterChart').innerHTML=chartFrame(yr,[0,1,2,3,4].map(i=>({x:46+i/4*528,label:fmt(xr.min+(xr.max-xr.min)*i/4,1)})),'Nota','Palavras por minuto',points);bindChartDetails('waScatterChart');
  }
  function renderTimeline(data){
   if(!data.timeline.length)return empty('waHistoryChart','O histórico de notas aparecerá após as primeiras avaliações.');
@@ -37,7 +37,7 @@
   const pts=rows.map((p,i)=>({...p,x:rows.length>1?46+i/(rows.length-1)*528:310,y:212-(p.value-yr.min)/(yr.max-yr.min)*192}));
   const line=smoothPath(pts),area=`${line} L ${pts.at(-1).x},212 L ${pts[0].x},212 Z`;
   const labels=[...new Set([0,Math.floor((rows.length-1)/3),Math.floor((rows.length-1)*2/3),rows.length-1])].map(i=>({x:pts[i].x,label:dateLabel(rows[i].date),anchor:i===0&&rows.length>1?'start':i===rows.length-1&&rows.length>1?'end':'middle'}));
-  const body=`<defs><linearGradient id="waHistoryFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B57056" stop-opacity=".24"/><stop offset="100%" stop-color="#B57056" stop-opacity=".02"/></linearGradient></defs>${pts.length>1?`<path d="${area}" fill="url(#waHistoryFill)"/><path d="${line}" fill="none" stroke="#B57056" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`:''}${pts.map(p=>{const title=`${dateLabel(p.date)} · nota ${fmt(p.value)} · ${p.count} escrita${p.count===1?'':'s'}`;return `<circle class="wa-point" tabindex="0" cx="${p.x}" cy="${p.y}" r="4.5" fill="#DCCD8A" stroke="#B57056" stroke-width="2" aria-label="${esc(title)}"><title>${esc(title)}</title></circle>`;}).join('')}`;
+  const body=`<defs><linearGradient id="waHistoryFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B57056" stop-opacity=".24"/><stop offset="100%" stop-color="#B57056" stop-opacity=".02"/></linearGradient></defs>${pts.length>1?`<path d="${area}" fill="url(#waHistoryFill)"/><path d="${line}" fill="none" stroke="#B57056" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`:''}${pts.map(p=>{const title=`${fullDate(p.row.createdAt)} · ${p.row.prompt||p.row.category||'Escrita livre'} · nota ${fmt(p.value)}`;return `<circle class="wa-point" tabindex="0" cx="${p.x}" cy="${p.y}" r="4.5" fill="#DCCD8A" stroke="#B57056" stroke-width="2" aria-label="${esc(title)}"><title>${esc(title)}</title></circle>`;}).join('')}`;
   el('waHistoryChart').innerHTML=chartFrame(yr,labels,'Nota','Data',body);bindChartDetails('waHistoryChart');
  }
  function renderComments(data){
