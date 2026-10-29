@@ -162,51 +162,17 @@ const EXPANDED_PROMPTS = {
 Object.entries(EXPANDED_PROMPTS).forEach(([category,prompts])=>PROMPTS[category]=prompts);
 CATEGORY_SKILLS["Elaboração e storytelling"] = "Treinar desenvolvimento de ideias, construção de cenas, progressão narrativa e capacidade de conduzir o leitor até uma conclusão.";
 
-const WRITING_CHALLENGES={
-  "Precisão lexical":{tip:"Procure a palavra exata. Ao usar uma expressão genérica como ‘bom’, ‘ruim’, ‘coisa’, ‘muito’, ‘legal’ ou ‘fazer’, pergunte: o que exatamente quero dizer? Não busque uma palavra mais sofisticada; busque uma mais precisa."},
-  "Elaboração":{tip:"Segure a conclusão. Antes de dizer o que algo significou, construa contexto, detalhes, acontecimentos ou evidências suficientes para o leitor percorrer o caminho com você."},
-  "Sintaxe & ritmo":{tip:"Varie deliberadamente a arquitetura das frases. Misture períodos curtos e longos, coordenação e subordinação, pausas e repetições intencionais. Evite construir todas as frases do mesmo jeito."}
-};
-const INTENSITIES={"🌱 Fácil":"Entrada mais direta: o tema pede uma operação principal e pouca preparação.","🌿 Média":"Exige desenvolver, organizar ou sustentar a ideia por alguns passos.","🌳 Profunda":"Pede mais nuance, contraponto, elaboração ou controle consciente da forma."};
-let selectedChallenges=new Set(), selectedIntensities=new Set();
-
-function promptIndex(category,prompt){return (PROMPTS[category]||[]).indexOf(prompt)}
-function intensityFor(category,prompt){if(category==="Livre")return "🌱 Fácil";const i=promptIndex(category,prompt);return i<7?"🌱 Fácil":i<14?"🌿 Média":"🌳 Profunda"}
-function challengeTagsFor(category,prompt){
-  if(category==="Livre")return ["Precisão lexical","Elaboração","Sintaxe & ritmo"];
-  const i=promptIndex(category,prompt), tags=[];
-  if(["Memória e descrição","Registro emocional","Elaboração e storytelling","Explicação","Síntese"].includes(category)||i%3===0)tags.push("Precisão lexical");
-  if(["Memória e descrição","Explicação","Opinião","Argumentação","Registro emocional","Elaboração e storytelling","Criatividade"].includes(category)||i%4===0)tags.push("Elaboração");
-  if(["Argumentação","Criatividade","Elaboração e storytelling"].includes(category)||i%2===1)tags.push("Sintaxe & ritmo");
-  return [...new Set(tags)];
-}
-function challengeMatches(category,prompt){if(!selectedChallenges.size)return true;const tags=challengeTagsFor(category,prompt);return [...selectedChallenges].some(x=>tags.includes(x))}
-function intensityMatches(category,prompt){return !selectedIntensities.size||selectedIntensities.has(intensityFor(category,prompt))}
-function matchesFilters(category,prompt){return challengeMatches(category,prompt)&&intensityMatches(category,prompt)}
-
-function renderChallengeTips(){const box=document.getElementById('challengeTips');if(!box)return;if(!selectedChallenges.size){box.hidden=true;box.innerHTML='';return}box.hidden=false;box.innerHTML=[...selectedChallenges].map(name=>`<div class="challenge-tip"><strong>${esc(name)}</strong><span>${esc(WRITING_CHALLENGES[name].tip)}</span></div>`).join('')}
-function populateFilterPills(id,allLabel,items,set,attr,onChange){const wrap=document.getElementById(id);if(!wrap)return;const names=[allLabel,...items];wrap.innerHTML=names.map(name=>`<button type="button" class="category-pill ${name===allLabel?'active':''}" data-${attr}="${name}">${name}</button>`).join('');wrap.querySelectorAll(`button[data-${attr}]`).forEach(btn=>btn.onclick=()=>{const name=btn.dataset[attr];if(name===allLabel)set.clear();else set.has(name)?set.delete(name):set.add(name);wrap.querySelectorAll(`button[data-${attr}]`).forEach(b=>{const x=b.dataset[attr];b.classList.toggle('active',x===allLabel?set.size===0:set.has(x))});onChange?.();document.getElementById('promptCard').hidden=true})}
-function populateChallenges(){populateFilterPills('challengePills','Todos',Object.keys(WRITING_CHALLENGES),selectedChallenges,'challenge',renderChallengeTips)}
-function populateIntensities(){populateFilterPills('intensityPills','Todas',Object.keys(INTENSITIES),selectedIntensities,'intensity',()=>{})}
-
 choosePrompt=function(){
   const pool=selectedCategories.size?[...selectedCategories]:Object.keys(PROMPTS),recent=getRecent();
-  const eligibleCategories=pool.filter(c=>(PROMPTS[c]||[]).some(p=>matchesFilters(c,p)));
+  const eligibleCategories=pool.filter(c=>(PROMPTS[c]||[]).length);
   const category=randomItem(eligibleCategories.length?eligibleCategories:pool);
-  let candidates=(PROMPTS[category]||[]).filter(p=>matchesFilters(category,p)&&!recent.includes(`${category}::${p}`));
-  if(!candidates.length)candidates=(PROMPTS[category]||[]).filter(p=>matchesFilters(category,p));
+  let candidates=(PROMPTS[category]||[]).filter(p=>!recent.includes(`${category}::${p}`));
+  if(!candidates.length)candidates=[...(PROMPTS[category]||[])];
   if(!candidates.length)candidates=[...(PROMPTS[category]||[])];
   const prompt=randomItem(candidates);
-  currentPrompt={category,prompt,challenges:challengeTagsFor(category,prompt),intensity:intensityFor(category,prompt)};
+  currentPrompt={category,prompt};
   recent.push(`${category}::${prompt}`);setRecent(recent);return currentPrompt;
 };
 
-(function installTrainingUI(){
-  const categoryField=document.getElementById('categoryPills')?.closest('.field');if(!categoryField)return;
-  const challengeField=document.createElement('div');challengeField.className='field challenge-field';challengeField.innerHTML='<label>Desafio</label><div id="challengePills" class="category-pills" role="group" aria-label="Desafio"></div><div id="challengeTips" class="challenge-tips" hidden></div>';
-  categoryField.insertAdjacentElement('afterend',challengeField);
-  const intensityField=document.createElement('div');intensityField.className='field challenge-field';intensityField.innerHTML='<label>Intensidade</label><div id="intensityPills" class="category-pills" role="group" aria-label="Intensidade"></div>';
-  challengeField.insertAdjacentElement('afterend',intensityField);
-  const style=document.createElement('style');style.textContent='.challenge-field{margin-top:20px}.challenge-tips{margin-top:12px;display:grid;gap:8px}.challenge-tips[hidden]{display:none}.challenge-tip{padding:12px 14px;border:1px solid var(--border,#dedede);border-radius:12px;background:var(--surface,#fff);font-size:13px;line-height:1.45}.challenge-tip strong{display:block;margin-bottom:4px}.challenge-tip span{opacity:.76}';document.head.appendChild(style);
-  populateCategories();populateChallenges();populateIntensities();
-})();
+// Categories and the expanded prompt library remain available without challenge filters.
+populateCategories();
