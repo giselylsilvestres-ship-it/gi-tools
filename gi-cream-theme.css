@@ -22,3 +22,17 @@ html[data-theme="dark"] svg[stroke="white"],html[data-theme="dark"] svg[stroke="
 
 /* Approved, validated pen artwork; shared by every module. */
 #giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon,.icon.escrita{background:#000 url('/assets/escrita-pen-v3.png') center / 85% 85% no-repeat!important}
+
+/* Shared page frame: identical content edges in every module and tab. */
+body > .app,body > main.main{
+ box-sizing:border-box!important;width:min(100%,1040px)!important;max-width:1040px!important;
+ margin-inline:auto!important;padding-inline:18px!important;
+ padding-top:max(24px,env(safe-area-inset-top))!important;
+}
+body > .app > .shell{width:100%!important;max-width:none!important;margin-inline:0!important}
+@media(max-width:760px){
+ body > .app,body > main.main{padding-left:max(16px,env(safe-area-inset-left))!important;padding-right:max(16px,env(safe-area-inset-right))!important}
+}
+/* Calendar navigation stays inside the shared frame on tablets. */
+body > .app .calendar-shell > .month-arrow.prev{left:-10px}
+body > .app .calendar-shell > .month-arrow.next{right:-10px}
