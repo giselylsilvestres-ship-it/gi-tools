@@ -82,3 +82,9 @@ button,input,select,textarea,a{touch-action:manipulation}
 #sessionModal .session-head-actions button[hidden]{display:none}
 #sessionModal .session-head-actions svg{width:18px;height:18px}
 .activity-summary{padding:24px 0}.activity-summary h3{margin:0 0 8px}.activity-summary p{color:var(--muted);font-size:14px;line-height:1.6}
+
+/* Explicit manual duration control; no automatic clock on opening a plan. */
+#workoutTimerToggle{display:inline-flex;align-items:center;justify-content:center;gap:5px;width:auto;min-width:0;height:32px;padding:0 9px;border-radius:999px;line-height:1;font-size:11px;font-weight:500}
+#workoutTimerToggle svg{position:static;inset:auto;transform:none;flex:0 0 12px;width:12px;height:12px}
+#workoutTimerToggle:disabled{display:none}
+.workout-duration-row{flex-wrap:wrap;gap:6px}

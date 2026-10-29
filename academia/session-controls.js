@@ -19,36 +19,16 @@
 
   const deleteBtn=document.getElementById('deleteWorkoutRecord');
 
-  function currentElapsed(){
-    if(!activeWorkout)return 0;
-    if(activeWorkout.startedAt)return Math.max(0,Math.floor((Date.now()-Date.parse(activeWorkout.startedAt))/1000));
-    return Math.max(0,Number(activeWorkout.elapsedSeconds)||0);
-  }
-
   function paintTimerButton(){
-    const btn=document.getElementById('workoutTimerToggle');
-    if(!btn||!activeWorkout)return;
+    const btn=document.getElementById('workoutTimerToggle');if(!btn||!activeWorkout)return;
     const running=activeWorkout.status==='active'&&!!activeWorkout.startedAt;
-    btn.classList.toggle('running',running);
-    btn.setAttribute('aria-label',running?'Pausar duração':'Retomar duração');
-    btn.title=running?'Pausar duração':'Retomar duração';
-    btn.disabled=activeWorkout.status!=='active';
+    const label=running?'Pausar':activeWorkout.timerStarted?'Retomar':'Iniciar';
+    btn.classList.toggle('running',running);btn.setAttribute('aria-label',label+' cronômetro');btn.title=label+' cronômetro';
+    btn.querySelector('.timer-label').textContent=label;btn.disabled=activeWorkout.status!=='active';
   }
-
   function toggleWorkoutTimer(){
     if(!activeWorkout||activeWorkout.status!=='active')return;
-    if(activeWorkout.startedAt){
-      activeWorkout.elapsedSeconds=currentElapsed();
-      activeWorkout.startedAt=null;
-      activeWorkout.timerPaused=true;
-    }else{
-      const elapsed=Math.max(0,Number(activeWorkout.elapsedSeconds)||0);
-      activeWorkout.startedAt=new Date(Date.now()-elapsed*1000).toISOString();
-      activeWorkout.timerPaused=false;
-    }
-    changed();
-    tickWorkout();
-    paintTimerButton();
+    Gym.toggleTimer(activeWorkout);changed();tickWorkout();paintTimerButton();
   }
 
   function syncStickyOffsets(){
@@ -102,7 +82,7 @@
         btn.id='workoutTimerToggle';
         btn.type='button';
         btn.className='workout-timer-toggle';
-        btn.innerHTML='<svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.3v9.4L17 12 9 7.3Z"></path></svg><svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7v10M15 7v10"></path></svg>';
+        btn.innerHTML='<svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.3v9.4L17 12 9 7.3Z"></path></svg><svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7v10M15 7v10"></path></svg><span class="timer-label">Iniciar</span>';
         btn.onclick=toggleWorkoutTimer;
         row.appendChild(btn);
       }
@@ -137,15 +117,6 @@
 
   new ResizeObserver(syncStickyOffsets).observe(head);
   window.addEventListener('resize',syncStickyOffsets);
-
-  // If the workout is paused, finishing must preserve accumulated duration instead of resetting it to zero.
-  document.getElementById('saveSession')?.addEventListener('click',()=>{
-    if(activeWorkout?.status==='active'&&!activeWorkout.startedAt){
-      const elapsed=Math.max(0,Number(activeWorkout.elapsedSeconds)||0);
-      activeWorkout.startedAt=new Date(Date.now()-elapsed*1000).toISOString();
-      activeWorkout.timerPaused=false;
-    }
-  },true);
 
   $('editWorkoutSheet').onclick=()=>{if(workoutSheet)openSheet(workoutSheet)};
 

@@ -48,15 +48,38 @@
     }
   }
   function start(template,history=[]){
-    const w=copy(template);w.version=3;w.status='active';w.startedAt=new Date().toISOString();w.finishedAt=null;w.restEnd=null;w.elapsedSeconds=0;w.notes='';
+    const w=copy(template);w.version=3;w.status='active';w.timerVersion=1;w.timerStarted=false;w.timerPaused=true;w.startedAt=null;w.finishedAt=null;w.restEnd=null;w.elapsedSeconds=0;w.notes='';
     w.exercises.forEach(e=>e.sets.forEach((s,i)=>steps(s).forEach((step,j)=>{
       const drop=j===0?null:j-1;step.done=false;delete step.weightEdited;delete step.repsEdited;
       for(const field of ['weight','reps'])step[field]=previousValue(history,e.exerciseId,i,drop,field)??step[field]??(field==='reps'?suggestedReps(s.targetReps):null);
     })));
     return w;
   }
+  function normalizeTimer(w){
+    // Legacy active clocks began merely by opening a plan. Do not count that wall time.
+    if(w.status==='active'&&w.timerVersion!==1){
+      w.elapsedSeconds=stats(w).steps?Math.max(0,Number(w.elapsedSeconds)||0):0;
+      w.startedAt=null;w.timerStarted=w.elapsedSeconds>0;w.timerPaused=true;w.timerVersion=1;
+    }
+    return w;
+  }
+  function elapsed(w,now=Date.now()){
+    const base=Math.max(0,Number(w.elapsedSeconds)||0);
+    if(w.status!=='active'||!w.startedAt)return base;
+    return base+Math.max(0,Math.floor((now-Date.parse(w.startedAt))/1000)||0);
+  }
+  function pauseTimer(w,now=Date.now()){
+    if(w.status!=='active')return w;
+    normalizeTimer(w);w.elapsedSeconds=elapsed(w,now);w.startedAt=null;w.timerPaused=true;return w;
+  }
+  function toggleTimer(w,now=Date.now()){
+    if(w.status!=='active')return w;
+    normalizeTimer(w);
+    if(w.startedAt)return pauseTimer(w,now);
+    w.startedAt=new Date(now).toISOString();w.timerStarted=true;w.timerPaused=false;return w;
+  }
   function validate(w){if(w.version!==3||!Array.isArray(w.exercises)||w.exercises.length>100)return 'Treino inválido.';if(!w.exercises.length)return 'Adicione pelo menos um exercício.';for(const e of w.exercises){if((!e.sets.length&&!w.activityOnly)||e.sets.length>30)return 'Use entre 1 e 30 séries por exercício.';for(const s of e.sets){for(const step of steps(s))if(step.done&&!valid(step))return 'Confira os valores: carga de 0 a 10.000 kg e repetições inteiras de 1 a 1.000, ou deixe em branco.'}}return null}
   function template(w){const t=copy(w);t.exercises.forEach(e=>e.sets.forEach(s=>steps(s).forEach(x=>x.done=false)));return {version:3,name:t.name,exercises:t.exercises}}
-  return {copy,id,number,set,exercise,steps,done,valid,stats,normalizeGroups,next,fromLinks,fromLegacy,previousValue,suggestedReps,prefill,setWeight,start,validate,template};
+  return {normalizeTimer,elapsed,pauseTimer,toggleTimer,copy,id,number,set,exercise,steps,done,valid,stats,normalizeGroups,next,fromLinks,fromLegacy,previousValue,suggestedReps,prefill,setWeight,start,validate,template};
 });
 
