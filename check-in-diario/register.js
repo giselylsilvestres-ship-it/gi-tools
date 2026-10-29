@@ -4,8 +4,32 @@ const pairs=[['Afiada','Nebulosa','Clareza e agilidade'],['Focada','Dispersa','A
 const habits=['Trabalho','Treino','Leitura','Amigos','Família','Descanso','Ar livre','Skincare','Água'];
 let details={},pendingPhoto=null,photoReady=true,saving=false,openVersion=0;
 const card=$('modal').querySelector('.modal-card');card.classList.add('registration-card');
-const moods=['Muito bem','Bem','Mais ou menos','Mal','Muito mal'];
-const face=(i)=>`<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="currentColor"/><g fill="none" stroke="var(--face-ink,#111)" stroke-width="2.6" stroke-linecap="round"><path d="M16 19h.1M32 19h.1"/><path d="${['M14 27q10 13 20 0','M16 28q8 8 16 0','M17 29h14','M16 32q8-8 16 0','M14 34q10-13 20 0'][i]}"/></g></svg>`;
+const moods=['radiante','de boa','meh','tristinha','terrível'];
+// Original vector expressions: generous eyes, directional pupils and distinct mouths.
+const face=(i)=>{
+ const eyes=[
+  '<ellipse cx="16.5" cy="19" rx="7" ry="7.5"/><ellipse cx="31" cy="17.5" rx="7" ry="7.5"/>',
+  '<ellipse cx="16" cy="20" rx="7" ry="7.5"/><ellipse cx="31" cy="19" rx="7" ry="7.5"/>',
+  '<ellipse cx="16" cy="22" rx="7" ry="6"/><ellipse cx="31" cy="22" rx="7" ry="6"/>',
+  '<ellipse cx="16.5" cy="22" rx="7" ry="7.5"/><ellipse cx="31" cy="23" rx="7" ry="7.5"/>',
+  '<ellipse cx="16" cy="22" rx="7" ry="7.5"/><ellipse cx="31" cy="22" rx="7" ry="7.5"/>'
+ ][i];
+ const pupils=[
+  '<ellipse cx="18" cy="17.5" rx="3.8" ry="4.8"/><ellipse cx="32.5" cy="16" rx="3.8" ry="4.8"/>',
+  '<ellipse cx="18" cy="20" rx="3.8" ry="4.8"/><ellipse cx="33" cy="19" rx="3.8" ry="4.8"/>',
+  '<ellipse cx="14" cy="23" rx="3.5" ry="3.8"/><ellipse cx="29" cy="23" rx="3.5" ry="3.8"/>',
+  '<ellipse cx="17" cy="24" rx="3.5" ry="4.5"/><ellipse cx="31.5" cy="25" rx="3.5" ry="4.5"/>',
+  '<ellipse cx="17" cy="24" rx="3.8" ry="4.5"/><ellipse cx="30" cy="24" rx="3.8" ry="4.5"/>'
+ ][i];
+ const mouths=[
+  '<path d="M16 29Q24 43 33 28Q25 32 16 29Z" fill="#171717"/><path d="M22 35q4-2 7-1" stroke="#B57056" stroke-width="2.5"/>',
+  '<path d="M18 31q7 7 13-2" fill="none" stroke="var(--face-ink,#171717)" stroke-width="2.2"/>',
+  '<path d="M20 33q5-2 10-1" fill="none" stroke="var(--face-ink,#171717)" stroke-width="2.2"/>',
+  '<path d="M19 35q6-6 12 0M10 15q5 1 10-3M28 12q5 4 10 3" fill="none" stroke="var(--face-ink,#171717)" stroke-width="2"/>',
+  '<path d="M18 35q6-9 13 0M10 16q6 0 10-5M28 11q4 5 10 5" fill="none" stroke="var(--face-ink,#171717)" stroke-width="2.3"/>'
+ ][i];
+ return `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="currentColor"/><g fill="#fffdf5">${eyes}</g><g fill="#171717">${pupils}</g><g stroke-linecap="round" stroke-linejoin="round">${mouths}</g></svg>`;
+};
 const icons=['◈','↗','▤','♧','♡','☾','☀','✧','◉'];
 const intro=document.createElement('div');intro.className='registration';intro.innerHTML=`<h3>Como você está?</h3><div class="mood-faces" role="group" aria-label="Humor">${moods.map((m,i)=>`<button type="button" data-mood="${100-i*25}" aria-pressed="false">${face(i)}<span>${m}</span></button>`).join('')}</div><h3>Como está sua mente?</h3><div class="mind-pairs">${pairs.map(([a,b,label],i)=>`<div><small>${label}</small><div class="mind-pair" role="group" aria-label="${label}"><button type="button" data-mind="${a}" data-pair="${i}">${a}</button><button type="button" data-mind="${b}" data-pair="${i}">${b}</button></div></div>`).join('')}</div><h3>O que rolou?</h3><div class="habit-pills">${habits.map((h,i)=>`<button type="button" data-habit="${h}" aria-pressed="false"><i aria-hidden="true">${icons[i]}</i><span>${h}</span></button>`).join('')}</div>`;
 card.querySelector('.modal-head').after(intro);
