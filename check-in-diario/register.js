@@ -35,7 +35,13 @@ const habitPaths=[
  'M4 21V9a8 8 0 0 1 16 0v12M4 10q8 2 8-8 0 10 8 8M8 14v7m8-7v7',
  'M3 17q4-5 8-2l3-6q1-2 3 0l-2 6 4-2q3-1 3 2l-5 6H8l-5 1'
 ];
-const habitIcon=h=>'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+habitPaths[habits.indexOf(h)]+'"/></svg>';
+const filledHealthIcons={
+ 'Comida':'<path fill-rule="evenodd" d="M11.8 6C8.2 6 7.8 4.9 5.3 5.8 1.4 7.3 2.1 13.6 4.3 17.3 6.3 20.6 9 22 12 22s5.7-1.4 7.7-4.7c2.2-3.7 2.9-10-1-11.5-2.5-.9-2.9.2-6.9.2ZM9.9 13.2c-.8-.2-1.6 3.1-.8 3.3.9.3 1.7-3 .8-3.3Zm4.2 0c-.9.3-.1 3.6.8 3.3.8-.2 0-3.5-.8-3.3Z"/><path d="M7 1.6c3.1-.1 5.1 1.9 5 4.3C9 6 7 4.1 7 1.6Z"/>',
+ 'Água':'<path d="M12 1.5C9.9 5.3 4 12.5 4 16a8 7 0 0 0 16 0c0-3.5-5.9-10.7-8-14.5Z"/>',
+ 'Exercício':'<g transform="rotate(45 12 12)"><rect x="10" y="7" width="4" height="10" rx="1"/><rect x="5" y="4" width="14" height="3.5" rx="1.75"/><rect x="7" y="1.5" width="10" height="3.5" rx="1.75"/><rect x="5" y="16.5" width="14" height="3.5" rx="1.75"/><rect x="7" y="19" width="10" height="3.5" rx="1.75"/></g>',
+ 'Dormi':'<path d="M13.1 2.2c.7-.1 1 .7.6 1.2-5 6.6.4 15 8 12.5.6-.2 1.1.4.8 1C18.8 24 8.9 24 4.4 17.4.1 11.1 4.3 3 13.1 2.2Z"/>'
+};
+const habitIcon=h=>filledHealthIcons[h]?'<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none">'+filledHealthIcons[h]+'</svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+habitPaths[habits.indexOf(h)]+'"/></svg>';
 let touchedHabits=new Set();
 
 let details={},pendingPhoto=null,photoReady=true,saving=false,openVersion=0;
