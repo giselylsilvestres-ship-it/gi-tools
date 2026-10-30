@@ -64,3 +64,7 @@ html #modal #save[hidden]{display:none!important}
 /* Compact mind toggles; labels remain available to assistive technology. */
 .registration .mind-pairs{gap:8px}
 .registration .mind-pair button:last-child.selected{background:#B57056;color:#111}
+
+/* Match the writing module navigation proportions without stretching tabs. */
+.app-header .view-switch{flex:0 1 auto;gap:6px;padding:4px}
+.app-header .view-switch button,.app-header #registerEntry{flex:0 0 auto;font-size:13px;font-weight:400;padding:8px 11px;line-height:normal;min-height:0}
