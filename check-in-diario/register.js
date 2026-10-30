@@ -145,5 +145,29 @@ $('save').onclick=async()=>{if(saving||!editing||!photoReady||!user)return;
  }catch(e){if(uploaded&&!persisted)await sb.storage.from('checkin-photos').remove([uploaded]);alert(e.message);}finally{saving=false;$('save').disabled=false;$('save').textContent='Salvar check-in';paint();}};
 const priorClose=closeModal;closeModal=function(){if(saving)return;openVersion++;priorClose();};$('closeModal').onclick=closeModal;$('modalBackdrop').onclick=closeModal;
 $('edit').onclick=()=>setEditing(true,true);
-})();
 
+let historyVersion=0;
+renderList=function(){
+ const version=++historyVersion,colors=['#DCCD8A','#A7993C','#475480','#B57056','#7F3B25'];
+ let period='';
+ $('list').innerHTML=items.length?[...items].sort((a,b)=>b.checkin_date.localeCompare(a.checkin_date)).map((x,index)=>{
+ const d=x.entry_details||{},hasMood=typeof d.mood==='number'&&Number.isFinite(d.mood),mi=hasMood?4-Math.round(Math.max(0,Math.min(100,d.mood))/25):null;
+ const monthKey=x.checkin_date.slice(0,7),heading=monthKey!==period?'<h2 class="timeline-month">'+esc(new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(x.checkin_date+'T12:00:00Z')))+'</h2>':'';period=monthKey;
+ const hs=[...new Set((d.habits||[]).map(h=>aliases[h]||h))],states=[...(x.mind_states||[]),...(x.soul_states||[])];
+ const time=d.note_time|| (x.created_at?new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}).format(new Date(x.created_at)):'');
+ return heading+'<article class="timeline-entry" style="--mood-color:'+(hasMood?colors[mi]:'var(--muted)')+'"><div class="timeline-face">'+(hasMood?face(mi):'<span aria-label="Sem humor registrado">○</span>')+'</div><div class="timeline-body"><div class="timeline-date">'+esc(fmtDate(x.checkin_date))+'</div><div class="timeline-heading"><strong>'+(hasMood?moods[mi]:'registro do dia')+'</strong><time>'+esc(time)+'</time><button type="button" data-open-date="'+esc(x.checkin_date)+'" aria-label="Abrir check-in de '+esc(fmtDate(x.checkin_date))+'">⌄</button></div>'+
+ (states.length?'<div class="timeline-states">'+states.map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>':'')+
+ (hs.length?'<div class="timeline-habits">'+hs.map(h=>'<span>'+(habits.includes(h)?habitIcon(h):'')+esc(h)+'</span>').join('')+'</div>':'')+
+ (x.joy_reason||x.day_saver?'<p class="timeline-joy">'+esc(x.joy_reason||x.day_saver)+'</p>':'')+
+ (x.note?'<p class="timeline-note">'+esc(x.note)+'</p>':'')+
+ (d.photo_path?'<img class="timeline-photo" data-photo-index="'+index+'" alt="Foto do dia" hidden>':'')+
+ (d.place||(d.tags||[]).length?'<div class="timeline-context">'+(d.place?'<span>⌖ '+esc(d.place)+'</span>':'')+(d.tags||[]).map(t=>'<span>#'+esc(t)+'</span>').join('')+'</div>':'')+'</div></article>';
+ }).join(''):'<p class="reg-muted">Seus check-ins aparecerão aqui.</p>';
+ $('list').querySelectorAll('[data-open-date]').forEach(b=>b.onclick=()=>openModal(b.dataset.openDate));
+ const sorted=[...items].sort((a,b)=>b.checkin_date.localeCompare(a.checkin_date));
+ $('list').querySelectorAll('[data-photo-index]').forEach(async img=>{
+ try{const {data,error}=await sb.storage.from('checkin-photos').createSignedUrl(sorted[Number(img.dataset.photoIndex)].entry_details.photo_path,3600);if(version!==historyVersion||!img.isConnected)return;if(!error&&data?.signedUrl){img.src=data.signedUrl;img.hidden=false;}}catch(e){/* Keep text available if a photo cannot load. */}
+ });
+};
+
+})();
