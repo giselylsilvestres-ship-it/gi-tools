@@ -123,3 +123,8 @@ html #modal #save[hidden]{display:none!important}
 #history .timeline-context{font-size:11px!important;font-weight:400!important;margin-top:10px}
 #history .timeline-photo{width:100px;height:100px;border-radius:10px;margin-top:12px}
 @media(max-width:460px){#history .timeline-entry{padding:18px 14px;gap:12px}#history .timeline-face{width:44px;flex-basis:44px}#historyPeriod h2{font-size:21px!important}}
+
+#history .timeline-heading button{display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;line-height:1!important}
+#history .timeline-heading button svg{display:block;width:15px;height:15px;flex:none}
+#history .timeline-habits span{display:inline-flex!important;align-items:center!important;vertical-align:middle;line-height:1.5!important}
+#history .timeline-habits svg{display:block!important;flex:0 0 15px;align-self:center}
