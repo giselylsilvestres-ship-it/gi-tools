@@ -1,7 +1,43 @@
 /* Additive registration UI; existing daily entries and legacy states remain intact. */
 (()=>{
 const pairs=[['Afiada','Nebulosa','Clareza e agilidade'],['Focada','Dispersa','Atenção'],['Organizada','Travada','Organização e ação'],['Descansada','Exausta','Fôlego mental']];
-const habits=['Trabalho','Treino','Leitura','Amigos','Família','Descanso','Ar livre','Skincare','Água'];
+const habitRows=[
+ ['Comida','Água','Exercício','Dormi'],
+ ['Amor','Família','Amigos','Inspiradores'],
+ ['Livro','Costura','Estudo','Arte'],
+ ['Casa','Trabalho','Finanças'],
+ ['Meditação','Reflexão','Espiritualidade','Natureza'],
+ ['Skin care','Cabelo','Massagem']
+];
+const habits=habitRows.flat();
+const aliases={'Treino':'Exercício','Leitura':'Livro','Ar livre':'Natureza','Skincare':'Skin care'};
+const habitPaths=[
+ 'M5 3v7m3-7v7M3 7h7m-4 3v11M17 3v18m0-18c-5 4-5 9 0 9',
+ 'M12 2s-7 8-7 13a7 7 0 0 0 14 0c0-5-7-13-7-13Z',
+ 'm6 6 12 12M3 8l5-5m8 18 5-5M2 5l3-3m14 20 3-3',
+ 'M19 15A8 8 0 0 1 9 4a8 8 0 1 0 10 11Z',
+ 'M20 5c-4-4-8 1-8 1S8 1 4 5c-5 5 8 15 8 15S25 10 20 5Z',
+ 'M3 20v-6c0-4 7-4 7 0v6m4 0v-6c0-4 7-4 7 0v6M7 7a3 3 0 1 0 0-.1M17 7a3 3 0 1 0 0-.1',
+ 'M2 21v-4c0-5 9-5 9 0v4m2 0v-4c0-5 9-5 9 0v4M7 7a3 3 0 1 0 0-.1M17 7a3 3 0 1 0 0-.1',
+ 'm12 2 2.5 6 6.5 1-5 4.5 1.5 6.5-5.5-3.5L6.5 20 8 13.5 3 9l6.5-1Z',
+ 'M12 5v16M3 3c4-1 6 0 9 2 3-2 5-3 9-2v16c-4-1-6 0-9 2-3-2-5-3-9-2Z',
+ 'm5 19 13-13c4-4 6 0 2 3L7 22ZM6 4c-7 7 8 5 1 12',
+ 'm2 8 10-5 10 5-10 5Zm4 3v6q6 6 12 0v-6M22 8v9',
+ 'M12 3C0 3 0 21 12 21h2c5 0-1-5 3-7 9-2 5-11-5-11ZM7 8h.1M12 6h.1M17 8h.1M6 13h.1',
+ 'm3 11 9-8 9 8M5 10v11h14V10M10 21v-7h4v7',
+ 'M3 7h18v14H3ZM8 7V3h8v4M3 12q9 5 18 0M12 12v4',
+ 'M3 6h18v15H3ZM3 10h18M17 15h4M6 3h13',
+ 'M10 5a2 2 0 1 0 4 0 2 2 0 1 0-4 0M9 12l3-3 3 3 5 2M4 14l5-2M8 16l-5 4h18l-5-4M12 9v8',
+ 'M9 4a8 8 0 0 0-4 13v4h12v-6c7-2 3-11-3-11ZM10 9h5m-5 4h3',
+ 'M12 2 9 9l-7 3 7 3 3 7 3-7 7-3-7-3ZM19 3v4m-2-2h4',
+ 'M20 3C4 2 1 14 9 18s13-5 11-15ZM5 22 16 9',
+ 'M8 4h8v3H8ZM7 7h10v15H7ZM10 1h4v3M10 12h4',
+ 'M4 21V9a8 8 0 0 1 16 0v12M4 10q8 2 8-8 0 10 8 8M8 14v7m8-7v7',
+ 'M3 17q4-5 8-2l3-6q1-2 3 0l-2 6 4-2q3-1 3 2l-5 6H8l-5 1'
+];
+const habitIcon=h=>'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+habitPaths[habits.indexOf(h)]+'"/></svg>';
+let touchedHabits=new Set();
+
 let details={},pendingPhoto=null,photoReady=true,saving=false,openVersion=0;
 const card=$('modal').querySelector('.modal-card');card.classList.add('registration-card');
 const moods=['radiante','de boa','meh','tristinha','terrível'];
@@ -16,8 +52,7 @@ const face=(i)=>{
  ][i];
  return `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="currentColor"/><g fill="none" stroke="var(--face-ink,#202b2b)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${expressions}</g></svg>`;
 };
-const icons=['◈','↗','▤','♧','♡','☾','☀','✧','◉'];
-const intro=document.createElement('div');intro.className='registration';intro.innerHTML=`<h3>como está?</h3><div class="mood-faces" role="group" aria-label="Humor">${moods.map((m,i)=>`<button type="button" data-mood="${100-i*25}" aria-pressed="false">${face(i)}<span>${m}</span></button>`).join('')}</div><h3>como tá a mente?</h3><div class="mind-pairs">${pairs.map(([a,b,label],i)=>`<div><div class="mind-pair" role="group" aria-label="${label}"><button type="button" data-mind="${a}" data-pair="${i}">${a}</button><button type="button" data-mind="${b}" data-pair="${i}">${b}</button></div></div>`).join('')}</div><h3>o que teve no dia?</h3><div class="habit-pills">${habits.map((h,i)=>`<button type="button" data-habit="${h}" aria-pressed="false"><i aria-hidden="true">${icons[i]}</i><span>${h}</span></button>`).join('')}</div>`;
+const intro=document.createElement('div');intro.className='registration';intro.innerHTML=`<h3>como está?</h3><div class="mood-faces" role="group" aria-label="Humor">${moods.map((m,i)=>`<button type="button" data-mood="${100-i*25}" aria-pressed="false">${face(i)}<span>${m}</span></button>`).join('')}</div><h3>como tá a mente?</h3><div class="mind-pairs">${pairs.map(([a,b,label],i)=>`<div><div class="mind-pair" role="group" aria-label="${label}"><button type="button" data-mind="${a}" data-pair="${i}">${a}</button><button type="button" data-mind="${b}" data-pair="${i}">${b}</button></div></div>`).join('')}</div><h3>o que teve no dia?</h3><div class="habit-pills">${habitRows.map(row=>`<div class="habit-row">${row.map(h=>`<button type="button" data-habit="${h}" aria-pressed="false"><i aria-hidden="true">${habitIcon(h)}</i><span>${h}</span></button>`).join('')}</div>`).join('')}</div>`;
 card.querySelector('.modal-head').after(intro);
 $('joy').closest('.field').hidden=true;$('note').previousElementSibling.textContent='Anotações · opcional';$('joy').placeholder='O que vale guardar de hoje?';
 const photo=document.createElement('div');photo.className='reg-photo';photo.innerHTML='<label class="reg-photo-button">＋ Adicionar foto<input id="regPhotoFile" type="file" accept="image/*" hidden></label><p class="reg-muted">Galeria ou câmera · opcional</p><img id="regPhotoPreview" alt="Foto da coisa boa do dia" hidden><button id="regPhotoRemove" type="button" class="reg-clear" hidden>Remover foto</button><p id="regPhotoStatus" role="status"></p>';
@@ -48,11 +83,25 @@ const paint=()=>{
 
 };
 const priorEditing=setEditing;setEditing=function(...args){priorEditing(...args);paint();};
-const priorOpen=openModal;openModal=function(date){if(saving)return;const version=++openVersion;details=structuredClone(items.find(x=>x.checkin_date===date)?.entry_details||{});pendingPhoto=null;photoReady=true;priorOpen(date);$('modalTitle').textContent='Seu check-in';$('journalTime').value=details.note_time||new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}).format(new Date());$('journalPlaceText').value=details.place||'';$('journalPlaceText').hidden=!details.place;$('journalTagsText').value=(details.tags||[]).join(', ');$('journalTagsText').hidden=!(details.tags||[]).length;$('regPhotoFile').value='';$('regPhotoPreview').hidden=true;$('regPhotoStatus').textContent='';paint();if(details.photo_path)sb.storage.from('checkin-photos').createSignedUrl(details.photo_path,3600).then(({data,error})=>{if(version!==openVersion||pendingPhoto||!details.photo_path)return;if(error){$('regPhotoStatus').textContent='Não consegui carregar a foto.';return;}$('regPhotoPreview').src=data.signedUrl;$('regPhotoPreview').hidden=false;});};
+const priorOpen=openModal;openModal=function(date){if(saving)return;const version=++openVersion;details=structuredClone(items.find(x=>x.checkin_date===date)?.entry_details||{});pendingPhoto=null;photoReady=true;touchedHabits=new Set();
+if(Array.isArray(details.habits))details.habits=[...new Set(details.habits.map(h=>aliases[h]||h))];
+const suggestHabits=!Array.isArray(details.habits);
+priorOpen(date);
+if(suggestHabits&&user)prefillHabits(date,version,user.id);$('modalTitle').textContent='Seu check-in';$('journalTime').value=details.note_time||new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}).format(new Date());$('journalPlaceText').value=details.place||'';$('journalPlaceText').hidden=!details.place;$('journalTagsText').value=(details.tags||[]).join(', ');$('journalTagsText').hidden=!(details.tags||[]).length;$('regPhotoFile').value='';$('regPhotoPreview').hidden=true;$('regPhotoStatus').textContent='';paint();if(details.photo_path)sb.storage.from('checkin-photos').createSignedUrl(details.photo_path,3600).then(({data,error})=>{if(version!==openVersion||pendingPhoto||!details.photo_path)return;if(error){$('regPhotoStatus').textContent='Não consegui carregar a foto.';return;}$('regPhotoPreview').src=data.signedUrl;$('regPhotoPreview').hidden=false;});};
 intro.querySelectorAll('[data-mind]').forEach(b=>b.onclick=()=>{if(!editing||saving)return;const selected=mindStates.has(b.dataset.mind);pairs[Number(b.dataset.pair)].slice(0,2).forEach(v=>mindStates.delete(v));if(!selected)mindStates.add(b.dataset.mind);paint();});
-intro.querySelectorAll('[data-habit]').forEach(b=>b.onclick=()=>{if(!editing||saving)return;const hs=new Set(details.habits||[]);hs.has(b.dataset.habit)?hs.delete(b.dataset.habit):hs.add(b.dataset.habit);details.habits=[...hs];paint();});
+intro.querySelectorAll('[data-habit]').forEach(b=>b.onclick=()=>{if(!editing||saving)return;touchedHabits.add(b.dataset.habit);const hs=new Set(details.habits||[]);hs.has(b.dataset.habit)?hs.delete(b.dataset.habit):hs.add(b.dataset.habit);details.habits=[...hs];paint();});
 intro.querySelectorAll('[data-mood]').forEach(b=>b.onclick=()=>{if(!editing||saving)return;details.mood=Number(b.dataset.mood);paint();});
 
+async function prefillHabits(date,version,userId){
+ const results=await Promise.allSettled([
+  sb.from('gym_sessions').select('id').eq('user_id',userId).eq('session_date',date).eq('completed',true).limit(1),
+  sb.from('garmin_daily').select('sleep_score').eq('user_id',userId).eq('date',date).limit(1)
+ ]);
+ if(version!==openVersion||saving||!editing)return;
+ const hs=new Set(details.habits||[]);
+ results.forEach((r,i)=>{const habit=i===0?'Exercício':'Dormi';if(r.status!=='fulfilled'||r.value.error||touchedHabits.has(habit))return;const rows=r.value.data||[];if(i===0?rows.length>0:rows.some(x=>x.sleep_score!=null&&Number(x.sleep_score)>=80))hs.add(habit);});
+ details.habits=[...hs];paint();
+}
 async function compress(file){if(file.size>25*1024*1024)throw Error('Escolha uma foto de até 25 MB.');const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await img.decode();const ratio=Math.min(1,1600/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*ratio);canvas.height=Math.round(img.height*ratio);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);return await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Não consegui preparar a foto.')),'image/jpeg',.85));}finally{URL.revokeObjectURL(url);}}
 $('regPhotoFile').onchange=async()=>{const file=$('regPhotoFile').files[0];if(!file)return;const version=openVersion;photoReady=false;$('regPhotoStatus').textContent='Preparando foto…';$('save').disabled=true;try{const blob=await compress(file);if(version!==openVersion)return;pendingPhoto=blob;$('regPhotoPreview').src=URL.createObjectURL(blob);$('regPhotoPreview').hidden=false;$('regPhotoStatus').textContent='Foto pronta para salvar.';}catch(e){if(version===openVersion)$('regPhotoStatus').textContent=e.message;}finally{if(version===openVersion){photoReady=true;$('save').disabled=false;paint();}}};
 $('regPhotoRemove').onclick=()=>{pendingPhoto=null;delete details.photo_path;$('regPhotoPreview').hidden=true;$('regPhotoFile').value='';paint();};
