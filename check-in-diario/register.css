@@ -77,3 +77,8 @@ html #modal #save[hidden]{display:none!important}
 .habit-pills .habit-row i{width:44px;height:44px}
 .habit-pills .habit-row button.selected i{background:#DCCD8A;border-color:#DCCD8A;color:#111}
 @media(min-width:600px){.habit-pills .habit-row button{font-size:14px}.habit-pills .habit-row i{width:48px;height:48px}}
+
+/* Journal focus follows the check-in palette, including Safari. */
+#modal .journal-sheet input,#modal .journal-sheet textarea{caret-color:#A7993C;accent-color:#DCCD8A;-webkit-tap-highlight-color:#DCCD8A33}
+#modal .journal-context input:focus,#modal #journalTime:focus{outline:2px solid #DCCD8A!important;outline-offset:2px;box-shadow:none!important;border-radius:6px}
+#modal .journal-toolbar #journalPlace{color:#DCCD8A}
