@@ -37,6 +37,7 @@ function render(){
  $('monthlyMoodCharts').innerHTML='<article class="calendar-chart"><h2>contagem de humor</h2><svg class="mood-count" viewBox="0 0 300 160" role="img" aria-label="'+total+' registros com humor"><path d="M40 135A110 110 0 0 1 260 135" fill="none" stroke="var(--surface2)" stroke-width="32"/>'+arcs+'<text x="150" y="125" text-anchor="middle" class="mood-total">'+total+'</text></svg><div class="count-faces">'+names.map((n,i)=>'<div>'+face(i)+'<b>'+counts[i]+'</b><span>'+n+'</span></div>').join('')+'</div>'+(current.length>total?'<p class="calendar-empty">'+(current.length-total)+' registro(s) sem humor informado</p>':'')+'</article><article class="calendar-chart"><h2>histórico de humor</h2>'+history+'</article>';
  }
  bindDays();
+ document.dispatchEvent(new CustomEvent('gica-calendar-period',{detail:{year:y,month:m,mode}}));
 }
 const previousRender=renderCalendar;renderCalendar=function(...args){previousRender(...args);render();};
 render();
