@@ -13,7 +13,7 @@
  catalogView.classList.remove('view','active');catalogView.classList.add('builder-catalog');
  const catalogHead=catalogView.querySelector('.section-head');catalogHead?.querySelector('div')?.remove();catalogHead?.classList.add('builder-toolbar');exerciseBody.appendChild(catalogView);
  const recentFirst=(a,b)=>(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0)||a.name.localeCompare(b.name,'pt-BR');
- const orderedTrainings=()=>trainings.slice().sort(recentFirst);
+ const orderedTrainings=()=>trainings.slice().sort((a,b)=>Number(a.is_archived===true)-Number(b.is_archived===true)||recentFirst(a,b));
  function refreshTrainingStatuses(){
   const list=$('trainingList');
   orderedTrainings().forEach(row=>{
@@ -30,7 +30,7 @@
   $('builderSheets').querySelector('.builder-count').textContent=String(sheets.length);
   $('builderExercises').querySelector('.builder-count').textContent=String(catalog.length);
   const trainingOrder=new Map(orderedTrainings().map((t,i)=>[t.id,i]));
-  const orderedSheets=sheets.slice().sort((a,b)=>(trainingOrder.get(a.training_id)??Infinity)-(trainingOrder.get(b.training_id)??Infinity)||recentFirst(a,b));
+  const orderedSheets=sheets.slice().sort((a,b)=>Number(!sheetIsAvailable(a))-Number(!sheetIsAvailable(b))||(trainingOrder.get(a.training_id)??Infinity)-(trainingOrder.get(b.training_id)??Infinity)||recentFirst(a,b));
   $('builderSheetList').innerHTML=sheets.length?orderedSheets.map(sh=>{
    const training=trainings.find(t=>t.id===sh.training_id),count=sh.routine_data?.exercises?.length??sheetLinks(sh.id).length;
    return '<button type="button" class="sheet-card builder-compact-row '+(!sheetIsAvailable(sh)?'is-inactive':'')+'" data-builder-sheet="'+esc(sh.id)+'"><strong>'+esc(sh.name)+'</strong><span class="builder-row-meta">'+esc(training?.name||'Sem treino')+' · '+count+' '+(count===1?'exercício':'exercícios')+' · '+(sh.is_archived?'Inativa':trainingIsAvailable(training)?'Ativa':'Ativa · treino inativo')+'</span></button>';
@@ -46,11 +46,12 @@
    close('formModal');await load();currentTraining=trainings.find(t=>t.id===training.id)||training;$('builderSheets').open=true;openSheet(data.id,true);
   });
  };
- const oldCatalog=renderCatalog;renderCatalog=function(...args){catalog.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));return oldCatalog(...args);};$('exerciseSearch').oninput=renderCatalog;
+ const oldCatalog=renderCatalog;renderCatalog=function(...args){catalog.sort((a,b)=>Number(a.is_archived===true)-Number(b.is_archived===true)||a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));return oldCatalog(...args);};$('exerciseSearch').oninput=renderCatalog;
  const oldRender=renderTrainings;renderTrainings=function(...args){oldRender(...args);refresh();};
  const oldLoad=load;load=async function(...args){await oldLoad(...args);refresh();renderCatalog();};
  const tab=document.querySelector('[data-view="trainings"]'),click=tab.onclick;tab.onclick=function(event){click?.call(this,event);renderCatalog();};
  refresh();renderTrainings();renderCatalog();
 })();
+
 
 
