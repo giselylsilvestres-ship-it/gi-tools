@@ -1,0 +1,28 @@
+#calendar>.legacy-calendar{display:none!important}
+.calendar-controls{display:flex;flex-direction:column;gap:24px;margin:10px 0 24px}
+.calendar-mode{align-self:center;display:flex;gap:6px;padding:4px;background:var(--surface2);border-radius:999px}
+.calendar-mode button{padding:8px 18px;background:none;border:0;border-radius:999px;font:inherit;font-size:13px;color:var(--muted)}
+.calendar-mode button[aria-pressed=true]{background:var(--surface);color:var(--text)}
+.calendar-period{display:flex;align-items:center;justify-content:center;gap:18px}
+.calendar-period h1{font-size:26px;letter-spacing:-.03em;margin:0;text-align:center;min-width:180px;text-transform:capitalize}
+.calendar-period button{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:50%;width:36px;height:36px;padding:0;font-size:26px}
+.month-moods,.year-pixels,.calendar-chart{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:20px}
+.month-moods{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:16px 4px}
+.month-weekday{text-align:center;font-size:12px;color:var(--muted)}
+.month-mood{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:0;padding:0;color:var(--text);font:inherit;font-size:13px;min-width:0}
+.month-face{width:36px;height:36px;display:grid;place-items:center}.month-face svg{width:100%;height:100%}
+.empty-mood{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--surface2);color:var(--muted);font-size:22px}
+.month-mood.is-today>span:last-child{color:#A7993C;font-weight:750}
+.year-pixels{display:grid;grid-template-columns:20px repeat(12,minmax(0,1fr));gap:5px 2px;max-width:600px;margin:auto;padding:16px 10px}
+.pixel-month,.pixel-day{font-size:10px;color:var(--muted);text-align:center;align-self:center}.pixel-month{margin-bottom:5px}
+.year-pixel{display:grid;place-items:center;min-width:0;aspect-ratio:1;border:0;background:none;padding:0}
+.year-pixel i{display:block;width:75%;height:75%;border-radius:50%;background:var(--surface2);border:1px solid var(--border);box-sizing:border-box}.year-pixel.recorded i{border-color:var(--muted)}
+.mood-key{display:flex;justify-content:center;flex-wrap:wrap;gap:10px 14px;margin:18px 0 28px;color:var(--muted);font-size:11px}
+.mood-key span{display:flex;align-items:center;gap:5px}.mood-key i{width:9px;height:9px;border-radius:50%}.mood-key .unrated{border:1px solid var(--muted);background:var(--surface2)}
+#monthlyMoodCharts{display:grid;gap:20px}.calendar-chart{min-width:0}.calendar-chart h2{font-size:20px;letter-spacing:-.02em;margin:0 0 22px}
+.mood-count{display:block;width:min(100%,360px);margin:auto}.mood-count text{fill:var(--text);font-family:inherit;font-size:32px;font-weight:700}
+.count-faces{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;border-top:1px solid var(--border);padding-top:18px}
+.count-faces>div{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;font-size:11px;color:var(--muted);min-width:0}.count-faces svg{width:36px;height:36px}.count-faces b{font-size:16px;color:var(--text)}.count-faces span{text-align:center}
+.mood-history{display:block;width:100%;height:auto;overflow:visible}.mood-history text{font:11px sans-serif;fill:var(--muted)}
+.calendar-empty{color:var(--muted);font-size:13px;line-height:1.6}
+@media(min-width:800px){#monthlyMoodCharts{grid-template-columns:1fr 1fr}.month-moods{gap:22px 12px}.month-face{width:44px;height:44px}.calendar-period h1{font-size:32px}}
