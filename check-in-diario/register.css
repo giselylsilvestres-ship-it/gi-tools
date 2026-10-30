@@ -60,3 +60,7 @@ html #modal #save[hidden]{display:none!important}
 .journal-context input{width:100%;box-sizing:border-box;border:0;border-bottom:1px solid var(--border);padding:12px 4px;background:none;color:var(--text)}
 .journal-sheet .reg-photo{margin:0}.journal-sheet .reg-photo-button,.journal-sheet .reg-photo>.reg-muted{display:none}.journal-sheet #regPhotoStatus:empty{display:none}
 @media(max-width:380px){.journal-toolbar{gap:10px}.journal-sheet{padding:12px}}
+
+/* Compact mind toggles; labels remain available to assistive technology. */
+.registration .mind-pairs{gap:8px}
+.registration .mind-pair button:last-child.selected{background:#B57056;color:#111}
