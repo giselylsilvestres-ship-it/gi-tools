@@ -6,11 +6,11 @@ const habitRows=[
  ['Amor','Família','Amigos','Inspiradores'],
  ['Livro','Costura','Estudo','Arte'],
  ['Casa','Trabalho','Finanças','Escrita'],
- ['Meditação','Reflexão','Espiritualidade','Natureza'],
+ ['Meditação','Reflexão','Fé','Natureza'],
  ['Skin care','Cabelo','Massagem']
 ];
 const habits=habitRows.flat();
-const aliases={'Treino':'Exercício','Leitura':'Livro','Ar livre':'Natureza','Skincare':'Skin care'};
+const aliases={'Espiritualidade':'Fé','Treino':'Exercício','Leitura':'Livro','Ar livre':'Natureza','Skincare':'Skin care'};
 const habitPaths=[
  'M5 3v7m3-7v7M3 7h7m-4 3v11M17 3v18m0-18c-5 4-5 9 0 9',
  'M12 2s-7 8-7 13a7 7 0 0 0 14 0c0-5-7-13-7-13Z',
@@ -52,7 +52,11 @@ const filledHealthIcons={
  'Casa':'<path d="M2 11c-.8 0-1.2-1-.6-1.6L11 1.8a1.7 1.7 0 0 1 2 0l9.6 7.6c.6.6.2 1.6-.6 1.6h-1v10a1 1 0 0 1-1 1h-5.5v-4.5a2.5 2.5 0 0 0-5 0V22H4a1 1 0 0 1-1-1V11Z"/>',
  'Trabalho':'<path fill-rule="evenodd" d="M4 2h16a1 1 0 0 1 1 1v12H3V3a1 1 0 0 1 1-1Zm1 2v9h14V4ZM3 16h18l2 4c.5 1-.1 2-1.2 2H2.2C1.1 22 .5 21 1 20Zm7 2-.5 2h5l-.5-2Z"/>',
  'Escrita':'<path d="M6 2h10v15H6a2 2 0 0 0 0 4h1v-1H6a1 1 0 0 1 0-2h3v5l1.5-1 1.5 1v-4h7a1 1 0 0 1 0 2h-6v1h6a2 2 0 0 0 0-4H6c-1 0-2 .3-3 1V5a3 3 0 0 1 3-3ZM18 2h1a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-1Z"/>',
- 'Finanças':'<path d="M8 6 5.5 2.5c-.4-.8 1-1.2 2.2-.7C9 .4 15 .4 16.3 1.8c1.2-.5 2.6-.1 2.2.7L16 6ZM8 7h8c3.8 3.1 7.2 8.3 6 12.3-.9 3.3-19.1 3.3-20 0C.8 15.3 4.2 10.1 8 7Z"/><path d="M14.4 11.6c-3.6-2.1-6.4 2-2.4 3s1.3 5.1-2.4 3M12 10v10" style="fill:none;stroke:var(--panel,#181818);stroke-width:1.5;stroke-linecap:round"/>'
+ 'Finanças':'<path d="M8 6 5.5 2.5c-.4-.8 1-1.2 2.2-.7C9 .4 15 .4 16.3 1.8c1.2-.5 2.6-.1 2.2.7L16 6ZM8 7h8c3.8 3.1 7.2 8.3 6 12.3-.9 3.3-19.1 3.3-20 0C.8 15.3 4.2 10.1 8 7Z"/><path d="M14.4 11.6c-3.6-2.1-6.4 2-2.4 3s1.3 5.1-2.4 3M12 10v10" style="fill:none;stroke:var(--panel,#181818);stroke-width:1.5;stroke-linecap:round"/>',
+ 'Meditação':'<circle cx="12" cy="4" r="3"/><path d="M9 8h6c1 0 1.6.6 2 1.6l1.7 4.1 3.2 1.9c1.7 1 .6 3-1 2.3l-4.4-1.8-1-2.2v3.5c3.9-.2 6.7.3 6.7 2.2 0 2.6-4.5 2.2-6 2.4 1.1 3-3.6.7-4.2.5-.6.2-5.3 2.5-4.2-.5-1.5-.2-6 .2-6-2.4 0-1.9 2.8-2.4 6.7-2.2v-3.5l-1 2.2-4.4 1.8c-1.6.7-2.7-1.3-1-2.3l3.2-1.9L8 9.6C8.4 8.6 8 8 9 8Z"/>',
+ 'Reflexão':'<path d="M14 2c-2-1.4-4-.6-5 .2-2-.7-4 .3-4.6 1.7C1.8 4.2.8 6.3 1.5 8 0 10 .4 13 2.7 14c.7 2.7 3.1 3.3 5.1 3 1.2 1.4 3.3 1.2 5.3 2l2.4 4h2l-.7-4c5.4.6 7.3-4 5-6 2.7-1.8 1.9-5-1-5.6.2-2.2-1.7-4-4-3.8C16.6 2.3 15.3 1.5 14 2Z"/><path d="M5 6c2 1 3 0 3.5-1M7 6l1 2m3-4c2 .5 2 2 2.5 3M11 8c3 2 5 1 6-1m-2 2c2 1 2 2 2.5 4M5 10c-2 1-2 3-1 4m3-1c1-2 2-2 4-1m2 2c1 2 3 3 5 1" style="fill:none;stroke:var(--panel,#181818);stroke-width:1;stroke-linecap:round"/>',
+ 'Fé':'<path d="M11.4 2.7c0-1.7-1.8-2-2.5-.4L4.7 11c-.5 1-.3 2.8-.3 4L1 18.5 5 22l5.3-5.1c.7-.7 1.1-1.5 1.1-2.5V8.7c-1.3-1-2.2-.3-2.5 1.4l-.8 3.5c-.2.8-1.3.5-1.1-.3l.8-4c.4-2.4 2-3.3 3.6-2.6Zm1.2 0c0-1.7 1.8-2 2.5-.4l4.2 8.7c.5 1 .3 2.8.3 4l3.4 3.5-4 3.5-5.3-5.1c-.7-.7-1.1-1.5-1.1-2.5V8.7c1.3-1 2.2-.3 2.5 1.4l.8 3.5c.2.8 1.3.5 1.1-.3l-.8-4c-.4-2.4-2-3.3-3.6-2.6Z"/>',
+ 'Natureza':'<circle cx="6" cy="7" r="2.8"/><path d="M1.5 20c.8-4 4.4-4.4 7.8-3.9.8.2 1.2-.1 1.7-.9L15 7l4 6 2.2-3L24 19c.2.6-.1 1-1 1Z"/>'
 };
 const habitIcon=h=>filledHealthIcons[h]?'<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none">'+filledHealthIcons[h]+'</svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+habitPaths[habits.indexOf(h)]+'"/></svg>';
 let touchedHabits=new Set();
