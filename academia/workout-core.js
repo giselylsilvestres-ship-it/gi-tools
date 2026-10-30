@@ -79,7 +79,20 @@
     w.startedAt=new Date(now).toISOString();w.timerStarted=true;w.timerPaused=false;return w;
   }
   function validate(w){if(w.version!==3||!Array.isArray(w.exercises)||w.exercises.length>100)return 'Treino inválido.';if(!w.exercises.length)return 'Adicione pelo menos um exercício.';for(const e of w.exercises){if((!e.sets.length&&!w.activityOnly)||e.sets.length>30)return 'Use entre 1 e 30 séries por exercício.';for(const s of e.sets){for(const step of steps(s))if(step.done&&!valid(step))return 'Confira os valores: carga de 0 a 10.000 kg e repetições inteiras de 1 a 1.000, ou deixe em branco.'}}return null}
+  // Replace only untouched sets; completed or partially completed sets keep their original exercise.
+  function replaceExercise(w,instanceId,item,history=[]){
+    if(w.status!=='active')return 'Este treino já foi concluído.';
+    const index=w.exercises.findIndex(e=>e.id===instanceId),old=w.exercises[index];
+    if(!old||old.exerciseId===item.id)return 'Escolha outro exercício.';
+    const recorded=old.sets.filter(s=>steps(s).some(x=>x.done)),pending=old.sets.filter(s=>!steps(s).some(x=>x.done));
+    if(!pending.length)return 'Todas as séries deste exercício já têm registro. Adicione outro exercício para continuar.';
+    if(recorded.length&&w.exercises.length>=100)return 'O treino já tem o limite de exercícios.';
+    const fresh=exercise({id:recorded.length?id():old.id,exerciseId:item.id,name:item.name,imageUrl:item.image_url||null,restSeconds:old.restSeconds,supersetId:old.supersetId,sets:pending.map(s=>set({type:s.type,targetReps:s.targetReps,drops:(s.drops||[]).map(()=>({id:id(),weight:null,reps:null,done:false}))}))});
+    prefill({exercises:[fresh]},history);
+    if(recorded.length){old.sets=recorded;old.supersetId=null;w.exercises.splice(index+1,0,fresh);}else w.exercises.splice(index,1,fresh);
+    normalizeGroups(w.exercises);return null;
+  }
   function template(w){const t=copy(w);t.exercises.forEach(e=>e.sets.forEach(s=>steps(s).forEach(x=>x.done=false)));return {version:3,name:t.name,exercises:t.exercises}}
-  return {normalizeTimer,elapsed,pauseTimer,toggleTimer,copy,id,number,set,exercise,steps,done,valid,stats,normalizeGroups,next,fromLinks,fromLegacy,previousValue,suggestedReps,prefill,setWeight,start,validate,template};
+  return {replaceExercise,normalizeTimer,elapsed,pauseTimer,toggleTimer,copy,id,number,set,exercise,steps,done,valid,stats,normalizeGroups,next,fromLinks,fromLegacy,previousValue,suggestedReps,prefill,setWeight,start,validate,template};
 });
 
