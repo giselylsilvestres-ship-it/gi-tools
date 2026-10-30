@@ -18,10 +18,10 @@
     if(!currentTraining)return;
     const training=currentTraining;
     close('trainingModal');
-    form('treino','Editar treino',`<label class="field"><span>nome</span><input id="fName" value="${esc(training.name||'')}" placeholder="ex.: PPL"></label>`,async()=>{
+    form('treino','Editar treino',`<label class="field"><span>nome</span><input id="fName" value="${esc(training.name||'')}" placeholder="ex.: PPL"></label><label class="field"><span>Status</span><select id="trainingAvailability"><option value="active" ${!training.is_archived?'selected':''}>Ativo</option><option value="inactive" ${training.is_archived?'selected':''}>Inativo</option></select></label>`,async()=>{
       const name=document.getElementById('fName').value.trim();
       if(!name)return;
-      const r=await sb.from('gym_trainings').update({name}).eq('id',training.id).eq('user_id',user.id);
+      const r=await sb.from('gym_trainings').update({name,is_archived:document.getElementById('trainingAvailability').value==='inactive'}).eq('id',training.id).eq('user_id',user.id);
       if(r.error){console.error(r.error);return alert('Não consegui editar o treino.');}
       close('formModal');
       await load();
@@ -66,3 +66,4 @@
     }
   };
 })();
+
