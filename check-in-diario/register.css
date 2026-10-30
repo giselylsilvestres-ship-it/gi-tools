@@ -128,3 +128,9 @@ html #modal #save[hidden]{display:none!important}
 #history .timeline-heading button svg{display:block;width:15px;height:15px;flex:none}
 #history .timeline-habits span{display:inline-flex!important;align-items:center!important;vertical-align:middle;line-height:1.5!important}
 #history .timeline-habits svg{display:block!important;flex:0 0 15px;align-self:center}
+
+#history .timeline-entry{cursor:pointer}
+#history .timeline-entry.is-collapsed .timeline-states,#history .timeline-entry.is-collapsed .timeline-habits,#history .timeline-entry.is-collapsed .timeline-note,#history .timeline-entry.is-collapsed .timeline-joy,#history .timeline-entry.is-collapsed .timeline-photo,#history .timeline-entry.is-collapsed .timeline-context{display:none!important}
+#history .timeline-entry.is-collapsed .timeline-heading button svg{transform:rotate(180deg)}
+#history .timeline-heading button svg{transition:transform .15s ease}
+#history .timeline-entry:focus-visible{outline:2px solid #DCCD8A;outline-offset:3px}
