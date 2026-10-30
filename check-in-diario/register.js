@@ -138,7 +138,7 @@ $('save').onclick=async()=>{if(saving||!editing||!photoReady||!user)return;
 
  saving=true;paint();$('save').disabled=true;$('save').textContent='Salvando…';let uploaded=null,persisted=false;const old=items.find(x=>x.checkin_date===selectedDate);try{
  if(pendingPhoto){uploaded=`${user.id}/${selectedDate}/${crypto.randomUUID()}.jpg`;const {error}=await sb.storage.from('checkin-photos').upload(uploaded,pendingPhoto,{contentType:'image/jpeg',upsert:false});if(error)throw Error('Não consegui enviar a foto. Seu texto continua aqui.');}
- const next={...details,note_time:$('journalTime').value,...(uploaded?{photo_path:uploaded}:{})};const payload={user_id:user.id,checkin_date:selectedDate,mind_states:[...mindStates],soul_states:[...soulStates],joy_reason:$('joy').value.trim()||null,note:$('note').value.trim()||null,entry_details:next,updated_at:new Date().toISOString()};
+ const next={...details,note_time:$('journalTime').value,...(uploaded?{photo_path:uploaded}:{})};const payload={user_id:user.id,checkin_date:selectedDate,mind_states:[...mindStates],note:$('note').value.trim()||null,entry_details:next,updated_at:new Date().toISOString()};
  const {error}=await sb.from('daily_checkins').upsert(payload,{onConflict:'user_id,checkin_date'});if(error)throw Error('Não consegui salvar. Seus campos continuam aqui para tentar novamente.');persisted=true;details=next;pendingPhoto=null;
  if(old?.entry_details?.photo_path&&old.entry_details.photo_path!==next.photo_path)await sb.storage.from('checkin-photos').remove([old.entry_details.photo_path]);
  await load();setEditing(false,true);$('regPhotoStatus').textContent='Check-in salvo.';
