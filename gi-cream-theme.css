@@ -39,4 +39,6 @@ body > .app .calendar-shell > .month-arrow.next{right:-10px}
 
 #giNav .gi-nav-link[href="/check-in-diario/"] .gi-nav-icon,.icon.checkin{background:transparent url('/assets/checkin-round-v4.svg') center / 100% 100% no-repeat!important;border-radius:50%!important;box-shadow:none!important}
 
-#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon,.icon.escrita{background:transparent url('/assets/escrita-pencil-v5.svg') center / 100% 100% no-repeat!important;border-radius:50%!important;box-shadow:none!important}
+#giNav .gi-nav-link[href="/escrita-diaria/"] .gi-nav-icon,.icon.escrita{background:transparent url('/assets/escrita-pencil-v6.svg') center / 100% 100% no-repeat!important;border-radius:50%!important;box-shadow:none!important}
+
+#giNav .gi-nav-link[href="/academia/"] .gi-nav-icon,.icon.academia{background:transparent url('/assets/academia-round-v6.svg') center / 100% 100% no-repeat!important;border-radius:50%!important;box-shadow:none!important}
