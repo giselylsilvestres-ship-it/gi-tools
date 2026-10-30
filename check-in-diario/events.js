@@ -1,9 +1,9 @@
 /* Annual personal dates; separate from daily mood records. */
 (()=>{
 let rows=[],owner=null,busy=false;
-const host=document.createElement('div');host.className='annual-tools';
-host.innerHTML='<button type="button" id="annualManage">Datas importantes</button>';
-$('calendar').prepend(host);
+const gift=document.createElement('button');gift.type='button';gift.id='annualManage';gift.setAttribute('aria-label','Datas importantes');gift.title='Datas importantes';
+gift.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13M12 8H8a3 3 0 1 1 3-3l1 3Zm0 0h4a3 3 0 1 0-3-3l-1 3Z"/></svg>';
+$('journalTag').after(gift);
 const dlg=document.createElement('dialog');dlg.className='annual-dialog';
 dlg.innerHTML='<div class="annual-heading"><h2>datas importantes</h2><button type="button" id="annualClose" aria-label="Fechar">×</button></div><p class="reg-muted">Aniversários e datas de relacionamento, todos os anos.</p><div id="annualList"></div><form id="annualForm"><input id="annualId" type="hidden"><label>Nome<input id="annualTitle" maxlength="120" required placeholder="Ex.: aniversário da mãe"></label><label>Tipo<select id="annualKind"><option value="birthday">Aniversário</option><option value="relationship">Relacionamento</option></select></label><label>Data original<input id="annualDate" type="date" required></label><p class="reg-muted">Repete todo ano. Datas de 29/02 aparecem nos anos bissextos.</p><p id="annualStatus" role="status"></p><div class="annual-actions"><button id="annualNew" type="button">Nova data</button><button id="annualSave" type="submit">Salvar</button></div></form>';
 document.body.append(dlg);
@@ -13,7 +13,7 @@ dlg.querySelectorAll('[data-event-edit]').forEach(b=>b.onclick=()=>{if(busy)retu
 dlg.querySelectorAll('[data-event-delete]').forEach(b=>b.onclick=async()=>{if(busy)return;const r=rows.find(x=>x.id===b.dataset.eventDelete);if(!confirm('Apagar “'+r.title+'” de todos os anos?'))return;busy=true;const {error}=await sb.from('checkin_events').delete().eq('id',r.id).eq('user_id',owner);busy=false;if(error){$('annualStatus').textContent='Não consegui apagar. Tente novamente.';return;}rows=rows.filter(x=>x.id!==r.id);reset();list();mark();});
 }
 function mark(){document.querySelectorAll('.mood-calendar [data-day]').forEach(b=>{const matches=rows.filter(r=>r.event_date.slice(5)===b.dataset.day.slice(5)&&r.event_date<=b.dataset.day);b.classList.toggle('has-annual-event',!!matches.length);if(matches.length){const label=matches.map(r=>r.title).join(' · ');b.title=label;b.setAttribute('aria-label',b.getAttribute('aria-label')?.split(' · Data importante:')[0]+' · Data importante: '+label);}});}
-$('annualManage').onclick=async()=>{reset();list();dlg.showModal();if(!owner){$('annualStatus').textContent='Carregando…';await refresh();$('annualStatus').textContent=owner?'':'Não consegui carregar. Tente novamente.';}};
+$('annualManage').onclick=async()=>{reset();$('annualDate').value=selectedDate||today();list();dlg.showModal();if(!owner){$('annualStatus').textContent='Carregando…';await refresh();$('annualStatus').textContent=owner?'':'Não consegui carregar. Tente novamente.';}};
 $('annualClose').onclick=()=>{if(!busy)dlg.close();};
 dlg.addEventListener('cancel',e=>{if(busy)e.preventDefault();});
 $('annualNew').onclick=()=>{if(!busy)reset();};
