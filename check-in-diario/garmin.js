@@ -82,7 +82,7 @@
  document.addEventListener('gica-calendar-period',e=>update(e.detail));
  const originalOpen=openModal;openModal=function(date){originalOpen(date);if(selectedDate!==date||document.getElementById('modal').hidden)return;showDay(date);};
  async function showDay(date){
-  const token=++dayVersion;let el=document.getElementById('garminDay');if(!el){el=document.createElement('details');el.id='garminDay';el.className='garmin-day';document.querySelector('#modal .modal-head').after(el);}el.open=false;el.innerHTML='<summary>Garmin · dados do dia</summary><p>Carregando…</p>';
+  const token=++dayVersion;let el=document.getElementById('garminDay');if(!el){el=document.createElement('details');el.id='garminDay';el.className='garmin-day';document.querySelector('#modal .modal-card').appendChild(el);}el.open=false;el.innerHTML='<summary>Garmin · dados do dia</summary><p>Carregando…</p>';
   try{const {data:{session}}=await sb.auth.getSession();if(!session)throw Error('session');const {data,error}=await sb.from('garmin_daily').select(fields).eq('user_id',session.user.id).eq('date',date).maybeSingle();if(token!==dayVersion||selectedDate!==date)return;if(error)throw error;
    const values=data?[
     ['Sono',duration(num(data.sleep_minutes)),data.sleep_minutes],['Nota do sono',fmt(num(data.sleep_score))+'/100',data.sleep_score],
