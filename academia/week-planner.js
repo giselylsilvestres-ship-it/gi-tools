@@ -76,7 +76,7 @@
   let choosingSheet=false;
   async function chooseSheet(sheetId){
     if(choosingSheet||savingWorkout||finishingWorkout||deletingWorkout){toast('Espere terminar de salvar e tente novamente.');return;}
-    const sheet=sheets.find(s=>s.id===sheetId);if(!sheet)return;
+    const sheet=sheets.find(s=>s.id===sheetId);if(!sheetIsAvailable(sheet))return toast('Esta ficha ou seu treino está inativo. Reative em Treinos para agendar.');
     const date=currentDate,existing=sessions.find(s=>s.session_date===date);
     if(existing?.completed||(existing?.workout_data&&Gym.stats(existing.workout_data).steps))return toast('Este dia já tem séries registradas. Edite o treino existente para preservá-las.');
     if(sheetId===(existing?.sheet_id||plans.find(p=>p.plan_date===date)?.sheet_id))return close('sheetPicker');
@@ -111,20 +111,20 @@
 
   function showTrainingStage(){
     const heading=document.querySelector('#sheetPicker .modal-head h2');if(heading)heading.textContent='Escolher treino';
-    const available=trainings.filter(t=>sheets.some(s=>s.training_id===t.id));
+    const available=trainings.filter(t=>trainingIsAvailable(t)&&sheets.some(s=>s.training_id===t.id&&sheetIsAvailable(s)));
     const trainingOptions=available.map(t=>{
-      const count=sheets.filter(s=>s.training_id===t.id).length;
+      const count=sheets.filter(s=>s.training_id===t.id&&sheetIsAvailable(s)).length;
       return `<button class="option" data-training-pick="${t.id}"><strong>${esc(t.name.toLowerCase())}</strong><small>${count} ficha${count===1?'':'s'} ›</small></button>`;
     }).join('');
     const canStartFree=!plans.some(p=>p.plan_date===currentDate)&&!sessions.some(s=>s.session_date===currentDate);
-    $('sheetOptions').innerHTML=trainingOptions+(canStartFree?`<button class="option free-workout-option" data-free-workout><strong>treino livre</strong><small>escolher exercícios avulsos</small></button>`:'');
+    $('sheetOptions').innerHTML=trainingOptions+(canStartFree?`<button class="option free-workout-option" data-free-workout><strong>treino livre</strong><small>escolher exercícios avulsos</small></button>`:'')+(!available.length?'<p class="meta">Nenhum treino com fichas ativas. Você pode reativar em Treinos.</p>':'');
     $('sheetOptions').querySelectorAll('[data-training-pick]').forEach(b=>b.onclick=()=>showSheetStage(b.dataset.trainingPick));
     $('sheetOptions').querySelector('[data-free-workout]')?.addEventListener('click',startFreeForSelectedDate);
   }
 
   function showSheetStage(trainingId){
     const training=trainings.find(t=>t.id===trainingId),heading=document.querySelector('#sheetPicker .modal-head h2');if(heading)heading.textContent=(training?.name||'Escolher ficha').toLowerCase();
-    const options=sheets.filter(s=>s.training_id===trainingId).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
+    const options=sheets.filter(s=>s.training_id===trainingId&&sheetIsAvailable(s)).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
     $('sheetOptions').innerHTML=`<button class="option picker-back" data-picker-back><strong>← treinos</strong><small>voltar</small></button>`+(options.length?options.map(s=>`<button class="option" data-sheet-pick="${s.id}"><strong>${esc(s.name)}</strong><small>${s.routine_data?.exercises?.length??sheetLinks(s.id).length} exercícios</small></button>`).join(''):'<div class="meta">Esse treino ainda não tem fichas.</div>');
     $('sheetOptions').querySelector('[data-picker-back]')?.addEventListener('click',showTrainingStage);
     $('sheetOptions').querySelectorAll('[data-sheet-pick]').forEach(b=>b.onclick=()=>chooseSheet(b.dataset.sheetPick));

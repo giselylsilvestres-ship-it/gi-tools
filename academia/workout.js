@@ -50,6 +50,8 @@ function chooseDraft(server){let draft;try{draft=JSON.parse(localStorage.getItem
   return server
 }
 openSession=function(){
+  const savedSession=sessions.find(s=>s.session_date===currentDate);let localSession=false;try{localSession=!!JSON.parse(localStorage.getItem(`gica-gym-v3:${user.id}:${currentDate}`)||'null')?.workout;}catch{}
+  if(currentSheet&&!sheetIsAvailable(currentSheet)&&!savedSession&&!localSession){toast('Esta ficha ou seu treino está inativo. Escolha uma ficha ativa.');openPicker();return;}
   if(deletingWorkout)return;
   if(savingWorkout){toast('Espere terminar de salvar o treino atual.');return}
   if(activeWorkout&&workoutDate!==currentDate&&saveState.includes('Sem sincronizar')){toast('Sincronize o treino atual antes de abrir outro dia.');return}

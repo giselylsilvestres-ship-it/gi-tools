@@ -1,6 +1,8 @@
 const $=id=>document.getElementById(id),sb=supabase.createClient(GI_SUPABASE_URL,GI_SUPABASE_KEY);
 let user,trainings=[],sheets=[],catalog=[],links=[],plans=[],sessions=[],logs=[],weekStart=startWeek(new Date()),currentDate,currentSheet,currentTraining,currentExercise,formSave;
 const pad=n=>String(n).padStart(2,'0'),key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),days=['dom','seg','ter','qua','qui','sex','sáb'];
+function trainingIsAvailable(t){return !!t&&t.is_archived!==true;}
+function sheetIsAvailable(s){return !!s&&s.is_archived!==true&&trainingIsAvailable(trainings.find(t=>t.id===s.training_id));}
 function startWeek(d){let x=new Date(d);x.setHours(12,0,0,0);let n=x.getDay()||7;x.setDate(x.getDate()-n+1);return x}
 const modalStack=[];
 function close(id){$(id).hidden=true;const i=modalStack.indexOf(id);if(i>=0)modalStack.splice(i,1);document.body.style.overflow=modalStack.length?'hidden':'';if(modalStack.length)$(modalStack.at(-1)).querySelector('.modal-head h2')?.focus()}
