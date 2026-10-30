@@ -5,7 +5,7 @@ const habitRows=[
  ['Comida','Água','Exercício','Dormi'],
  ['Amor','Família','Amigos','Inspiradores'],
  ['Livro','Costura','Estudo','Arte'],
- ['Casa','Trabalho','Finanças'],
+ ['Casa','Trabalho','Finanças','Escrita'],
  ['Meditação','Reflexão','Espiritualidade','Natureza'],
  ['Skin care','Cabelo','Massagem']
 ];
@@ -35,6 +35,7 @@ const habitPaths=[
  'M4 21V9a8 8 0 0 1 16 0v12M4 10q8 2 8-8 0 10 8 8M8 14v7m8-7v7',
  'M3 17q4-5 8-2l3-6q1-2 3 0l-2 6 4-2q3-1 3 2l-5 6H8l-5 1'
 ];
+habitPaths.splice(15,0,'');
 const filledHealthIcons={
  'Comida':'<path fill-rule="evenodd" d="M11.8 6C8.2 6 7.8 4.9 5.3 5.8 1.4 7.3 2.1 13.6 4.3 17.3 6.3 20.6 9 22 12 22s5.7-1.4 7.7-4.7c2.2-3.7 2.9-10-1-11.5-2.5-.9-2.9.2-6.9.2ZM9.9 13.2c-.8-.2-1.6 3.1-.8 3.3.9.3 1.7-3 .8-3.3Zm4.2 0c-.9.3-.1 3.6.8 3.3.8-.2 0-3.5-.8-3.3Z"/><path d="M7 1.6c3.1-.1 5.1 1.9 5 4.3C9 6 7 4.1 7 1.6Z"/>',
  'Água':'<path d="M12 1.5C9.9 5.3 4 12.5 4 16a8 7 0 0 0 16 0c0-3.5-5.9-10.7-8-14.5Z"/>',
@@ -49,7 +50,9 @@ const filledHealthIcons={
  'Estudo':'<path d="M1.2 7.2 11 2.6a2.5 2.5 0 0 1 2 0l9.5 4.5c.5.3.5 1 0 1.3L12 13.3 1.2 8.5c-.6-.3-.6-1 0-1.3ZM5 12l6 2.7a2.4 2.4 0 0 0 2 0l6-2.7v5c0 3-14 3-14 0Z"/><rect x="21" y="8" width="1.5" height="13" rx=".75"/>',
  'Arte':'<path fill-rule="evenodd" d="M12 2C5 2 1 7 1 13c0 5 3.7 9 8.7 9 5.4 0 1.1-4.6 4.1-5 5.5 1.2 8.2-.8 8.2-5C22 6 18 2 12 2ZM8 7a1.5 1.5 0 1 0 3 0 1.5 1.5 0 1 0-3 0Zm6 0a1.5 1.5 0 1 0 3 0 1.5 1.5 0 1 0-3 0ZM4 11a1.5 1.5 0 1 0 3 0 1.5 1.5 0 1 0-3 0Zm13 1a1.5 1.5 0 1 0 3 0 1.5 1.5 0 1 0-3 0ZM6 18a1.7 1.7 0 1 0 3.4 0 1.7 1.7 0 1 0-3.4 0Z"/>',
  'Casa':'<path d="M2 11c-.8 0-1.2-1-.6-1.6L11 1.8a1.7 1.7 0 0 1 2 0l9.6 7.6c.6.6.2 1.6-.6 1.6h-1v10a1 1 0 0 1-1 1h-5.5v-4.5a2.5 2.5 0 0 0-5 0V22H4a1 1 0 0 1-1-1V11Z"/>',
- 'Trabalho':'<path fill-rule="evenodd" d="M4 2h16a1 1 0 0 1 1 1v12H3V3a1 1 0 0 1 1-1Zm1 2v9h14V4ZM3 16h18l2 4c.5 1-.1 2-1.2 2H2.2C1.1 22 .5 21 1 20Zm7 2-.5 2h5l-.5-2Z"/>'
+ 'Trabalho':'<path fill-rule="evenodd" d="M4 2h16a1 1 0 0 1 1 1v12H3V3a1 1 0 0 1 1-1Zm1 2v9h14V4ZM3 16h18l2 4c.5 1-.1 2-1.2 2H2.2C1.1 22 .5 21 1 20Zm7 2-.5 2h5l-.5-2Z"/>',
+ 'Escrita':'<path d="M6 2h10v15H6a2 2 0 0 0 0 4h1v-1H6a1 1 0 0 1 0-2h3v5l1.5-1 1.5 1v-4h7a1 1 0 0 1 0 2h-6v1h6a2 2 0 0 0 0-4H6c-1 0-2 .3-3 1V5a3 3 0 0 1 3-3ZM18 2h1a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-1Z"/>',
+ 'Finanças':'<path d="M8 6 5.5 2.5c-.4-.8 1-1.2 2.2-.7C9 .4 15 .4 16.3 1.8c1.2-.5 2.6-.1 2.2.7L16 6ZM8 7h8c3.8 3.1 7.2 8.3 6 12.3-.9 3.3-19.1 3.3-20 0C.8 15.3 4.2 10.1 8 7Z"/><path d="M14.4 11.6c-3.6-2.1-6.4 2-2.4 3s1.3 5.1-2.4 3M12 10v10" style="fill:none;stroke:var(--panel,#181818);stroke-width:1.5;stroke-linecap:round"/>'
 };
 const habitIcon=h=>filledHealthIcons[h]?'<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none">'+filledHealthIcons[h]+'</svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+habitPaths[habits.indexOf(h)]+'"/></svg>';
 let touchedHabits=new Set();
@@ -109,13 +112,15 @@ intro.querySelectorAll('[data-habit]').forEach(b=>b.onclick=()=>{if(!editing||sa
 intro.querySelectorAll('[data-mood]').forEach(b=>b.onclick=()=>{if(!editing||saving)return;details.mood=Number(b.dataset.mood);paint();});
 
 async function prefillHabits(date,version,userId){
+ const nextDate=new Date(Date.parse(date+'T12:00:00Z')+86400000).toISOString().slice(0,10);
  const results=await Promise.allSettled([
   sb.from('gym_sessions').select('id').eq('user_id',userId).eq('session_date',date).eq('completed',true).limit(1),
-  sb.from('garmin_daily').select('sleep_score').eq('user_id',userId).eq('date',date).limit(1)
+  sb.from('garmin_daily').select('sleep_score').eq('user_id',userId).eq('date',date).limit(1),
+  sb.from('writing_sessions').select('id').eq('user_id',userId).gte('written_at',date+'T00:00:00-03:00').lt('written_at',nextDate+'T00:00:00-03:00').limit(1)
  ]);
  if(version!==openVersion||saving||!editing)return;
  const hs=new Set(details.habits||[]);
- results.forEach((r,i)=>{const habit=i===0?'Exercício':'Dormi';if(r.status!=='fulfilled'||r.value.error||touchedHabits.has(habit))return;const rows=r.value.data||[];if(i===0?rows.length>0:rows.some(x=>x.sleep_score!=null&&Number(x.sleep_score)>=80))hs.add(habit);});
+ results.forEach((r,i)=>{const habit=['Exercício','Dormi','Escrita'][i];if(r.status!=='fulfilled'||r.value.error||touchedHabits.has(habit))return;const rows=r.value.data||[];if(i!==1?rows.length>0:rows.some(x=>x.sleep_score!=null&&Number(x.sleep_score)>=80))hs.add(habit);});
  details.habits=[...hs];paint();
 }
 async function compress(file){if(file.size>25*1024*1024)throw Error('Escolha uma foto de até 25 MB.');const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await img.decode();const ratio=Math.min(1,1600/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*ratio);canvas.height=Math.round(img.height*ratio);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);return await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Não consegui preparar a foto.')),'image/jpeg',.85));}finally{URL.revokeObjectURL(url);}}
