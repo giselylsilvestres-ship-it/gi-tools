@@ -43,7 +43,7 @@
    const name=$('builderSheetName').value.trim(),training=trainings.find(t=>t.id===$('builderSheetTraining').value);if(!name)return toast('Dê um nome à ficha.');if(!training)return toast('Selecione um treino.');
    const {data,error}=await sb.from('gym_sheets').insert({user_id:user.id,training_id:training.id,name,sort_order:sheets.filter(s=>s.training_id===training.id).length}).select().single();
    if(error){console.error(error);return toast('Não consegui criar a ficha. Tente novamente.');}
-   close('formModal');await load();currentTraining=trainings.find(t=>t.id===training.id)||training;$('builderSheets').open=true;openSheet(data.id);
+   close('formModal');await load();currentTraining=trainings.find(t=>t.id===training.id)||training;$('builderSheets').open=true;openSheet(data.id,true);
   });
  };
  const oldCatalog=renderCatalog;renderCatalog=function(...args){catalog.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));return oldCatalog(...args);};$('exerciseSearch').oninput=renderCatalog;
@@ -52,4 +52,5 @@
  const tab=document.querySelector('[data-view="trainings"]'),click=tab.onclick;tab.onclick=function(event){click?.call(this,event);renderCatalog();};
  refresh();renderTrainings();renderCatalog();
 })();
+
 
