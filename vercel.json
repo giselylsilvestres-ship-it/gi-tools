@@ -70,7 +70,7 @@
   "crons": [
     {
       "path": "/api/garmin-sync",
-      "schedule": "0 4 * * *"
+      "schedule": "0 14 * * *"
     }
   ]
 }
