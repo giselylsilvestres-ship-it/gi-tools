@@ -4,14 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       date:
-        description: 'Data inicial (YYYY-MM-DD). Vazio = hoje em São Paulo'
+        description: 'Data final (YYYY-MM-DD). Vazio = hoje em São Paulo'
         required: false
         type: string
       days:
-        description: 'Quantidade de dias (1-7)'
+        description: 'Quantidade de dias, contando para trás (1-7)'
         required: false
-        default: '1'
+        default: '2'
         type: string
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   sync:
@@ -19,15 +23,23 @@ jobs:
     steps:
       - name: Trigger Garmin sync
         env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
           INPUT_DATE: ${{ inputs.date }}
           INPUT_DAYS: ${{ inputs.days }}
+          OIDC_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
+          OIDC_TOKEN: ${{ env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
         run: |
           if [ -n "$INPUT_DATE" ]; then
             DATE="$INPUT_DATE"
           else
             DATE=$(TZ=America/Sao_Paulo date +%F)
           fi
+
+          RESPONSE=$(curl --fail-with-body --show-error --silent \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=gi-tools-garmin-run-now")
+          ID_TOKEN=$(printf '%s' "$RESPONSE" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>process.stdout.write(JSON.parse(s).value))")
+
           curl --fail-with-body --show-error --silent \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            "https://gi-tools.vercel.app/api/garmin-sync?date=${DATE}&days=${INPUT_DAYS}"
+            -X POST \
+            -H "Authorization: Bearer $ID_TOKEN" \
+            "https://gica-tools.vercel.app/api/garmin-run-now?date=${DATE}&days=${INPUT_DAYS}"
