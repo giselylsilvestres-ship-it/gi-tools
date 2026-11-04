@@ -4,31 +4,21 @@ const el=id=>document.getElementById(id),DAY=864e5,dash='—';
 // Master Key → Prickly Pear → Mozart → Sunburn → Roycroft Copper Red.
 const PALETTE=['#DCCD8A','#A7993C','#475480','#B57056','#7F3B25'];
 function d(s){return new Date(`${s}T12:00:00`)}function monday(x){x=new Date(x);x.setHours(12,0,0,0);let n=x.getDay()||7;x.setDate(x.getDate()-n+1);return x}function pct(a,b){return b?Math.round(a/b*100):0}function fmt(v,n=1){return Number(v).toFixed(n).replace('.',',')}
-function activityName(s,trainingNames){
-  const training=String(trainingNames.get(s.training_id)||'').toLowerCase();
-  const raw=String(s.workout_data?.name||'').toLowerCase();
-  const joined=training+' '+raw;
-  if(/boxe|boxing/.test(joined))return 'Boxe';
-  if(/funcional/.test(joined))return 'Funcional';
-  if(/hiit/.test(joined))return 'HIIT';
-  if(/spinning|cycling|velocity/.test(joined))return 'Spinning';
-  if(/corrida|running|race/.test(joined))return 'Corrida';
-  if(/caminhada|walking/.test(joined))return 'Caminhada';
-  if(/dança|danca/.test(joined))return 'Dança';
-  // A session with recorded resistance exercises is strength training even when
-  // the sheet is named by body parts (e.g. "ombro, peito e tríceps").
-  if(/muscula|leg|push|pull|ppl|perna|bunda|natflix|ombro|peito|tríceps|triceps|costas|bíceps|biceps/.test(joined)||s.workout_data?.exercises?.some(e=>e.sets?.some(x=>x.done&&x.type!=='warmup')))return 'Musculação';
-  return raw?raw[0].toUpperCase()+raw.slice(1):'Outros';
+function activityName(s,sheetTypes){
+  // Explicit sheet classification is authoritative. Historical sessions use the
+  // saved sheet ID; never infer a new activity type from an arbitrary sheet title.
+  const category=sheetTypes.get(s.sheet_id);
+  return category||'Não classificado';
 }
 function setsFrom(sessions){const out=[];for(const s of sessions)for(const ex of(s.workout_data?.exercises||[]))for(const set of(ex.sets||[])){if(!set.done||set.type==='warmup')continue;const w=set.weight==null||set.weight===''?null:Number(set.weight),r=set.reps==null||set.reps===''?null:Number(set.reps);out.push({date:s.session_date,exercise:ex.name,exerciseId:ex.exerciseId,weight:Number.isFinite(w)?w:null,reps:Number.isFinite(r)?r:null});for(const drop of(set.drops||[])){const dw=drop.weight==null||drop.weight===''?null:Number(drop.weight),dr=drop.reps==null||drop.reps===''?null:Number(drop.reps);if(Number.isFinite(dw)&&Number.isFinite(dr)&&dw>0&&dr>0)out.push({date:s.session_date,exercise:ex.name,exerciseId:ex.exerciseId,weight:dw,reps:dr,drop:true})}}return out}
 function e1rm(x){return x.weight>0&&x.reps>0?x.weight*(1+x.reps/30):null}function bestByExercise(sets,start,end){const m={};for(const x of sets){const dt=d(x.date),v=e1rm(x);if(v==null||dt<start||dt>end)continue;const k=x.exerciseId||x.exercise;m[k]=Math.max(m[k]||0,v)}return m}
 function strengthChange(sets,now){const a0=new Date(now);a0.setDate(a0.getDate()-29);const b1=new Date(a0);b1.setDate(b1.getDate()-1);const b0=new Date(b1);b0.setDate(b0.getDate()-29);const cur=bestByExercise(sets,a0,now),prev=bestByExercise(sets,b0,b1),changes=[];for(const k of Object.keys(cur))if(prev[k]>0)changes.push((cur[k]/prev[k]-1)*100);return changes.length?changes.reduce((a,b)=>a+b,0)/changes.length:null}
 function bars(target,rows){const max=Math.max(1,...rows.map(x=>x.value));target.innerHTML=rows.length?rows.map((x,i)=>`<div class="balance-row"><span class="balance-name">${x.name}</span><i class="balance-track"><b style="width:${x.value/max*100}%;background:${PALETTE[i%PALETTE.length]}"></b></i><strong>${x.value}</strong><small class="${x.tone||''}">${x.extra??''}</small></div>`).join(''):`<div class="strength-empty">${dash}</div>`}
-async function getData(){const[sr,cr,tr]=await Promise.all([sb.from('gym_sessions').select('id,session_date,completed,training_id,workout_data').eq('user_id',user.id).eq('completed',true).order('session_date'),sb.from('gym_exercise_catalog').select('id,name,muscle_groups,primary_muscles').eq('user_id',user.id),sb.from('gym_trainings').select('id,name').eq('user_id',user.id)]);if(sr.error)throw sr.error;if(cr.error)throw cr.error;if(tr.error)throw tr.error;return{sessions:sr.data||[],catalog:cr.data||[],trainings:tr.data||[]}}
+async function getData(){const[sr,cr,tr,sh]=await Promise.all([sb.from('gym_sessions').select('id,session_date,completed,training_id,sheet_id,workout_data').eq('user_id',user.id).eq('completed',true).order('session_date'),sb.from('gym_exercise_catalog').select('id,name,muscle_groups,primary_muscles').eq('user_id',user.id),sb.from('gym_trainings').select('id,name').eq('user_id',user.id),sb.from('gym_sheets').select('id,activity_type').eq('user_id',user.id)]);if(sr.error)throw sr.error;if(cr.error)throw cr.error;if(tr.error)throw tr.error;if(sh.error)throw sh.error;return{sessions:sr.data||[],catalog:cr.data||[],trainings:tr.data||[],sheets:sh.data||[]}}
 async function render(){let data;try{data=await getData()}catch(e){console.error('metrics',e);return}const done=data.sessions,now=new Date(),year=now.getFullYear(),yearDone=done.filter(s=>d(s.session_date).getFullYear()===year);const yearLen=365+(new Date(year,1,29).getMonth()===1?1:0),dayOfYear=Math.floor((now-new Date(year,0,1))/DAY)+1,yearProgress=Math.min(100,pct(dayOfYear,yearLen));el('mTotal').textContent=yearDone.length||dash;el('mTotalSub').textContent=yearDone.length?`${yearProgress}% do ano · YTD`:dash;if(el('mTotalBar'))el('mTotalBar').style.width=`${yearProgress}%`;
 const c30=new Date(now);c30.setDate(c30.getDate()-29);const recent=done.filter(s=>{const x=d(s.session_date);return x>=c30&&x<=now}),freq=recent.length?recent.length/30*7:null;el('mMonth').textContent=freq==null?dash:`${fmt(freq)}×`;const yearFreq=yearDone.length?yearDone.length/Math.max(1,dayOfYear)*7:null;el('mMonthSub').textContent=freq==null?dash:(yearFreq==null?dash:`média do ano · ${fmt(yearFreq)}×/sem`);
 const first=done.length?d(done[0].session_date):null;let weeks=0,good=0;if(first){for(let w=monday(first);w<=monday(now);w.setDate(w.getDate()+7)){weeks++;const end=new Date(w);end.setDate(end.getDate()+6);const n=done.filter(s=>{const x=d(s.session_date);return x>=w&&x<=end}).length;if(n>=4)good++}}const consistency=weeks?pct(good,weeks):null;el('mStreak').textContent=consistency==null?dash:`${consistency}%`;el('mStreakSub').textContent=weeks?`${good} de ${weeks} semanas`:dash;if(el('mStreakBar'))el('mStreakBar').style.width=`${consistency||0}%`;
-const am={},trainingNames=new Map(data.trainings.map(t=>[t.id,t.name]));recent.forEach(s=>{const n=activityName(s,trainingNames);am[n]=(am[n]||0)+1});bars(el('activityBalance'),Object.entries(am).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value,extra:`${pct(value,recent.length)}%`})));
+const am={},sheetTypes=new Map(data.sheets.map(sh=>[sh.id,sh.activity_type]));recent.forEach(s=>{const n=activityName(s,sheetTypes);am[n]=(am[n]||0)+1});bars(el('activityBalance'),Object.entries(am).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value,extra:`${pct(value,recent.length)}%`})));
 const sets=setsFrom(done),change=strengthChange(sets,now);el('mProgress').textContent=change==null?dash:`${change>=0?'+':''}${fmt(change)}%`;el('mProgress').classList.toggle('positive',change>0);el('mProgress').classList.toggle('negative',change<0);el('mProgressSub').textContent=change==null?dash:'vs. 30 dias anteriores';el('strengthDetail').textContent=change==null?dash:`${change>=0?'↑':'↓'} ${fmt(Math.abs(change))}%`;renderMuscles(sets,data.catalog,now);renderPRs(sets);renderStrengthChart(sets,now)}
 // Count each completed working set once, in its catalog's first (principal) muscle group.
 // Secondary involvement is intentionally not added as another full set.
