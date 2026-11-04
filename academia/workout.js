@@ -45,25 +45,70 @@ async function persistWorkout(){
 }
 function routineFor(sh){return sh.routine_data?.version===3?clone(sh.routine_data):{version:3,name:sh.name,exercises:Gym.fromLinks(sheetLinks(sh.id),catalog)}}
 function chooseDraft(server){let draft;try{draft=JSON.parse(localStorage.getItem(draftKey())||'null')}catch{}if(!draft?.workout||draft.workout.version!==3)return server;
+  // A finished session in Supabase is authoritative. A stale local draft must never reopen it with zero completed sets.
+  if(server?.completed===true||server?.workout_data?.status==='finished'){
+    if(draft.workout.status!=='finished'||draft.revision!==server.revision){try{localStorage.setItem(draftKey()+':recovery',JSON.stringify(draft))}catch{}}
+    return server;
+  }
   if(draft.revision===(server?.revision||0)&&(!server?.workout_data||(draft.workout.modifiedAt||0)>(server.workout_data.modifiedAt||0)))return {...server,workout_data:draft.workout,revision:draft.revision,sheet_id:draft.sheetId,training_id:draft.trainingId};
   if(draft.revision<(server?.revision||0)&&(draft.workout.modifiedAt||0)>(server.workout_data?.modifiedAt||0)){try{localStorage.setItem(draftKey()+':recovery',JSON.stringify(draft))}catch{}toast('A conta tem uma versão mais recente. Sua cópia local foi preservada.');}
   return server
 }
-openSession=function(){
-  const savedSession=sessions.find(s=>s.session_date===currentDate);let localSession=false;try{localSession=!!JSON.parse(localStorage.getItem(`gica-gym-v3:${user.id}:${currentDate}`)||'null')?.workout;}catch{}
-  if(currentSheet&&!sheetIsAvailable(currentSheet)&&!savedSession&&!localSession){toast('Esta ficha ou seu treino está inativo. Escolha uma ficha ativa.');openPicker();return;}
+openSession=async function(){
+  const openingDate=currentDate;
   if(deletingWorkout)return;
   if(savingWorkout){toast('Espere terminar de salvar o treino atual.');return}
-  if(activeWorkout&&workoutDate!==currentDate&&saveState.includes('Sem sincronizar')){toast('Sincronize o treino atual antes de abrir outro dia.');return}
-  workoutDate=currentDate;let server=sessions.find(s=>s.session_date===currentDate);const selected=chooseDraft(server);workoutSheet=selected?.sheet_id??currentSheet?.id??null;workoutTraining=selected?.training_id??currentSheet?.training_id??null;activeRevision=selected?.revision||0;workoutConflict=false;
+  if(activeWorkout&&workoutDate!==openingDate&&saveState.includes('Sem sincronizar')){toast('Sincronize o treino atual antes de abrir outro dia.');return}
+  // Revalidate the exact day against Supabase before opening. The cached sessions list and
+  // a browser-local draft may be stale after finishing on another device or tab.
+  let server=sessions.find(s=>s.session_date===openingDate);
+  try{
+    const {data,error}=await sb.from('gym_sessions').select('*').eq('user_id',user.id).eq('session_date',openingDate).maybeSingle();
+    if(error)throw error;
+    if(currentDate!==openingDate)return;
+    if(data){
+      const at=sessions.findIndex(s=>s.id===data.id||s.session_date===openingDate);
+      if(at<0)sessions.push(data);else sessions[at]=data;
+      server=data;
+      const savedSheet=sheets.find(sh=>sh.id===data.sheet_id);
+      if(savedSheet)currentSheet=savedSheet;
+    }else if(server){
+      toast('A sessão não foi encontrada na conta. Não vou substituí-la por uma ficha vazia.');
+      return;
+    }
+  }catch(error){
+    console.error('Erro ao confirmar sessão antes de abrir:',error);
+    toast('Não consegui confirmar o treino salvo. Seus dados estão preservados; tente novamente com conexão.');
+    return;
+  }
+  let localSession=false;
+  try{localSession=!!JSON.parse(localStorage.getItem(`gica-gym-v3:${user.id}:${openingDate}`)||'null')?.workout}catch{}
+  if(currentSheet&&!sheetIsAvailable(currentSheet)&&!server&&!localSession){toast('Esta ficha ou seu treino está inativo. Escolha uma ficha ativa.');openPicker();return}
+  workoutDate=openingDate;
+  const selected=chooseDraft(server);
+  workoutSheet=selected?.sheet_id??currentSheet?.id??null;
+  workoutTraining=selected?.training_id??currentSheet?.training_id??null;
+  activeRevision=selected?.revision||0;
+  workoutConflict=false;
   if(selected?.workout_data)activeWorkout=clone(selected.workout_data);
   else if(server&&logs.some(l=>l.session_id===server.id))activeWorkout={version:3,name:currentSheet?.name||'Treino anterior',status:'legacy',notes:server.notes||'',exercises:Gym.fromLegacy(logs.filter(l=>l.session_id===server.id),links,catalog)};
-  else {if(!currentSheet){toast('Esta ficha não está mais disponível.');return}activeWorkout=Gym.start(routineFor(currentSheet),prefillHistory());if(!activeWorkout.exercises.length){activeWorkout.activityOnly=true;activeWorkout.exercises=[Gym.exercise({name:currentSheet.name,sets:[]})]}}
+  else {
+    if(server){toast('Existe um treino salvo sem detalhes carregáveis. Não vou substituí-lo.');return}
+    if(!currentSheet){toast('Esta ficha não está mais disponível.');return}
+    activeWorkout=Gym.start(routineFor(currentSheet),prefillHistory());
+    if(!activeWorkout.exercises.length){activeWorkout.activityOnly=true;activeWorkout.exercises=[Gym.exercise({name:currentSheet.name,sets:[]})]}
+  }
   Gym.normalizeTimer(activeWorkout);
   if(activeWorkout.status==='active')Gym.prefill(activeWorkout,prefillHistory());
-  $('sessionDate').textContent=new Date(workoutDate+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});$('sessionTitle').textContent=activeWorkout.name;$('sessionNotes').value=activeWorkout.notes||'';
-  $('sessionNotes').disabled=activeWorkout.status!=='active';$('sessionNotes').oninput=()=>{activeWorkout.notes=$('sessionNotes').value;changed()};
-  renderWorkout();setSaveState(activeWorkout.status==='legacy'?'Registro antigo · preservado':window.GYM_DEMO?'Prévia · salva só neste navegador':'Alterações salvas automaticamente');open('sessionModal');if(activeWorkout.status==='active')changed();
+  $('sessionDate').textContent=new Date(workoutDate+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  $('sessionTitle').textContent=activeWorkout.name;
+  $('sessionNotes').value=activeWorkout.notes||'';
+  $('sessionNotes').disabled=activeWorkout.status!=='active';
+  $('sessionNotes').oninput=()=>{activeWorkout.notes=$('sessionNotes').value;changed()};
+  renderWorkout();
+  setSaveState(activeWorkout.status==='legacy'?'Registro antigo · preservado':activeWorkout.status==='finished'?'✓ Registro concluído carregado da conta':window.GYM_DEMO?'Prévia · salva só neste navegador':'Alterações salvas automaticamente');
+  open('sessionModal');
+  if(activeWorkout.status==='active')changed();
 };
 function previousSet(e,index,drop){for(const w of historyWorkouts().filter(w=>w.date<workoutDate)){const prev=w.exercises.find(x=>x.exerciseId&&x.exerciseId===e.exerciseId);const s=prev?.sets[index];const p=drop===null?s:s?.drops[drop];if(p?.done)return recordedStepLabel(p)}return '—'}
 function inputRow(e,s,index,step,drop,readonly){
