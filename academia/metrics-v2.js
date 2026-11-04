@@ -2,6 +2,7 @@
 const el=id=>document.getElementById(id),DAY=864e5,dash='—';
 // Ordered visual sequence requested for all categorical bars/markers:
 // Master Key → Prickly Pear → Mozart → Sunburn → Roycroft Copper Red.
+let musclePeriod='week',muscleSetsCache=[],muscleCatalogCache=[];
 const PALETTE=['#DCCD8A','#A7993C','#475480','#B57056','#7F3B25'];
 function d(s){return new Date(`${s}T12:00:00`)}function monday(x){x=new Date(x);x.setHours(12,0,0,0);let n=x.getDay()||7;x.setDate(x.getDate()-n+1);return x}function pct(a,b){return b?Math.round(a/b*100):0}function fmt(v,n=1){return Number(v).toFixed(n).replace('.',',')}
 function activityName(s,sheetTypes){
@@ -19,10 +20,31 @@ async function render(){let data;try{data=await getData()}catch(e){console.error
 const c30=new Date(now);c30.setDate(c30.getDate()-29);const recent=done.filter(s=>{const x=d(s.session_date);return x>=c30&&x<=now}),freq=recent.length?recent.length/30*7:null;el('mMonth').textContent=freq==null?dash:`${fmt(freq)}×`;const yearFreq=yearDone.length?yearDone.length/Math.max(1,dayOfYear)*7:null;el('mMonthSub').textContent=freq==null?dash:(yearFreq==null?dash:`média do ano · ${fmt(yearFreq)}×/sem`);
 const first=done.length?d(done[0].session_date):null;let weeks=0,good=0;if(first){for(let w=monday(first);w<=monday(now);w.setDate(w.getDate()+7)){weeks++;const end=new Date(w);end.setDate(end.getDate()+6);const n=done.filter(s=>{const x=d(s.session_date);return x>=w&&x<=end}).length;if(n>=4)good++}}const consistency=weeks?pct(good,weeks):null;el('mStreak').textContent=consistency==null?dash:`${consistency}%`;el('mStreakSub').textContent=weeks?`${good} de ${weeks} semanas`:dash;if(el('mStreakBar'))el('mStreakBar').style.width=`${consistency||0}%`;
 const am={},sheetTypes=new Map(data.sheets.map(sh=>[sh.id,sh.activity_type]));recent.forEach(s=>{const n=activityName(s,sheetTypes);am[n]=(am[n]||0)+1});bars(el('activityBalance'),Object.entries(am).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value,extra:`${pct(value,recent.length)}%`})));
-const sets=setsFrom(done),change=strengthChange(sets,now);el('mProgress').textContent=change==null?dash:`${change>=0?'+':''}${fmt(change)}%`;el('mProgress').classList.toggle('positive',change>0);el('mProgress').classList.toggle('negative',change<0);el('mProgressSub').textContent=change==null?dash:'vs. 30 dias anteriores';el('strengthDetail').textContent=change==null?dash:`${change>=0?'↑':'↓'} ${fmt(Math.abs(change))}%`;renderMuscles(sets,data.catalog,now);renderPRs(sets);renderStrengthChart(sets,now)}
+const sets=setsFrom(done),change=strengthChange(sets,now);el('mProgress').textContent=change==null?dash:`${change>=0?'+':''}${fmt(change)}%`;el('mProgress').classList.toggle('positive',change>0);el('mProgress').classList.toggle('negative',change<0);el('mProgressSub').textContent=change==null?dash:'vs. 30 dias anteriores';el('strengthDetail').textContent=change==null?dash:`${change>=0?'↑':'↓'} ${fmt(Math.abs(change))}%`;muscleSetsCache=sets;muscleCatalogCache=data.catalog;renderMuscles(sets,data.catalog,now);renderPRs(sets);renderStrengthChart(sets,now)}
 // Count each completed working set once, in its catalog's first (principal) muscle group.
 // Secondary involvement is intentionally not added as another full set.
-function renderMuscles(sets,catalog,now){const cutoff=new Date(now);cutoff.setDate(cutoff.getDate()-29);const recent=sets.filter(x=>d(x.date)>=cutoff&&d(x.date)<=now&&!x.drop),byName=new Map(catalog.map(x=>[String(x.name).toLowerCase(),x])),count={};for(const x of recent){const c=byName.get(String(x.exercise).toLowerCase()),groups=c?.muscle_groups?.length?c.muscle_groups:c?.primary_muscles||[];const primary=groups[0];if(primary)count[primary]=(count[primary]||0)+1}bars(el('muscleBalance'),Object.entries(count).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value,extra:dash})))}
+function renderMuscles(sets,catalog,now){
+  // Calendar week: Sunday through Saturday, not the rolling last seven days.
+  const today=new Date(now);today.setHours(12,0,0,0);
+  const cutoff=new Date(today);
+  cutoff.setDate(cutoff.getDate()-(musclePeriod==='week'?today.getDay():29));
+  const end=new Date(today);if(musclePeriod==='week')end.setDate(end.getDate()+6-today.getDay());
+  const recent=sets.filter(x=>{const date=d(x.date);return date>=cutoff&&date<=end&&!x.drop});
+  const byId=new Map(catalog.map(x=>[x.id,x])),byName=new Map(catalog.map(x=>[String(x.name).toLowerCase(),x])),count={};
+  for(const x of recent){
+    const exercise=byId.get(x.exerciseId)||byName.get(String(x.exercise).toLowerCase());
+    const groups=exercise?.primary_muscles?.length?exercise.primary_muscles:exercise?.muscle_groups||[];
+    const primary=groups[0];if(primary)count[primary]=(count[primary]||0)+1;
+  }
+  const label=el('muscleBalancePeriodLabel');if(label)label.textContent=musclePeriod==='week'?'séries por grupo · semana atual (dom–sáb)':'séries por grupo · últimos 30 dias';
+  document.querySelectorAll('[data-muscle-period]').forEach(button=>{const active=button.dataset.musclePeriod===musclePeriod;button.setAttribute('aria-pressed',String(active));button.classList.toggle('active',active)});
+  bars(el('muscleBalance'),Object.entries(count).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value,extra:dash})));
+}
+document.querySelectorAll('[data-muscle-period]').forEach(button=>button.addEventListener('click',()=>{
+  musclePeriod=button.dataset.musclePeriod;
+  if(muscleSetsCache.length||muscleCatalogCache.length)renderMuscles(muscleSetsCache,muscleCatalogCache,new Date());
+}));
+
 function renderPRs(sets){const valid=sets.filter(x=>e1rm(x)!=null),best={};for(const x of valid){const k=x.exerciseId||x.exercise,v=e1rm(x);if(!best[k]||v>best[k].v)best[k]={...x,v}}const rows=Object.values(best).sort((a,b)=>d(b.date)-d(a.date)).slice(0,4);el('recentPrs').className=rows.length?'pr-list':'strength-empty';el('recentPrs').innerHTML=rows.length?rows.map((x,i)=>`<div class="pr-row"><span class="pr-dot" style="background:${PALETTE[i%PALETTE.length]}"></span><div class="pr-copy"><strong>${x.exercise}</strong><small>${x.date.split('-').reverse().join('/')}</small></div><span class="pr-value">${fmt(x.weight,Number.isInteger(x.weight)?0:1)} kg × ${x.reps}</span></div>`).join(''):dash}
 function renderStrengthChart(sets,now){const target=el('strengthChart'),valid=sets.filter(x=>e1rm(x)!=null),days=[];for(let i=5;i>=0;i--){const end=new Date(now);end.setDate(end.getDate()-i*14);const start=new Date(end);start.setDate(start.getDate()-13);const m=bestByExercise(valid,start,end),vals=Object.values(m);days.push(vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null)}const vals=days.filter(v=>v!=null);if(vals.length<2){target.className='strength-empty';target.textContent=dash;return}const min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,points=days.map((v,i)=>v==null?null:{x:5+i/(days.length-1)*90,y:88-(v-min)/range*68}).filter(Boolean),line=points.map(p=>`${p.x},${p.y}`).join(' '),area=`5,94 ${line} ${points.at(-1).x},94`;target.className='strength-chart';target.innerHTML=`<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Evolução da força"><defs><linearGradient id="strengthFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B57056" stop-opacity=".30"/><stop offset="100%" stop-color="#B57056" stop-opacity=".02"/></linearGradient></defs><polygon points="${area}" fill="url(#strengthFill)"/><polyline points="${line}" fill="none" stroke="#B57056" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>${points.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="1.8" fill="#DCCD8A" stroke="#B57056" stroke-width=".8" vector-effect="non-scaling-stroke"/>`).join('')}</svg>`}
 const toggle=el('metricsDetailsToggle'),details=el('metricsDetails');if(toggle&&details)toggle.onclick=()=>{const open=details.hidden;details.hidden=!open;toggle.setAttribute('aria-expanded',String(open));toggle.querySelector('span').textContent=open?'⌃':'⌄'};const old=window.renderMetrics;window.renderMetrics=function(){old?.();render()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(render,150));else setTimeout(render,150);
