@@ -26,9 +26,9 @@ const sets=setsFrom(done),change=strengthChange(sets,now);el('mProgress').textCo
 function renderMuscles(sets,catalog,now){
   // Calendar week: Sunday through Saturday, not the rolling last seven days.
   const today=new Date(now);today.setHours(12,0,0,0);
-  const cutoff=new Date(today);
-  cutoff.setDate(cutoff.getDate()-(musclePeriod==='week'?today.getDay():29));
-  const end=new Date(today);if(musclePeriod==='week')end.setDate(end.getDate()+6-today.getDay());
+  const cutoff=musclePeriod==='week'?monday(today):new Date(today);
+  if(musclePeriod==='month')cutoff.setDate(cutoff.getDate()-29);
+  const end=new Date(today);if(musclePeriod==='week')end.setDate(cutoff.getDate()+6);
   const recent=sets.filter(x=>{const date=d(x.date);return date>=cutoff&&date<=end&&!x.drop});
   const byId=new Map(catalog.map(x=>[x.id,x])),byName=new Map(catalog.map(x=>[String(x.name).toLowerCase(),x])),count={};
   for(const x of recent){
@@ -36,9 +36,30 @@ function renderMuscles(sets,catalog,now){
     const groups=exercise?.primary_muscles?.length?exercise.primary_muscles:exercise?.muscle_groups||[];
     const primary=groups[0];if(primary)count[primary]=(count[primary]||0)+1;
   }
-  const label=el('muscleBalancePeriodLabel');if(label)label.textContent=musclePeriod==='week'?'séries por grupo · semana atual (dom–sáb)':'séries por grupo · últimos 30 dias';
+  // Compare the latest two distinct training days for the SAME exercise.
+  // Group percentages are the average of comparable exercise changes, never
+  // comparisons between different exercises or between different machines.
+  const histories=new Map();
+  for(const x of sets){
+    if(x.drop||e1rm(x)==null)continue;
+    const exercise=byId.get(x.exerciseId)||byName.get(String(x.exercise).toLowerCase());
+    const group=(exercise?.primary_muscles?.length?exercise.primary_muscles:exercise?.muscle_groups||[])[0];
+    if(!group)continue;
+    const key=x.exerciseId||String(x.exercise).toLowerCase();
+    if(!histories.has(key))histories.set(key,{group,days:new Map()});
+    const days=histories.get(key).days,estimated=e1rm(x);
+    days.set(x.date,Math.max(days.get(x.date)||0,estimated));
+  }
+  const changes={};
+  for(const {group,days} of histories.values()){
+    const dates=[...days.keys()].sort().reverse();
+    if(dates.length<2)continue;
+    const last=days.get(dates[0]),previous=days.get(dates[1]);
+    if(previous>0)(changes[group]??=[]).push((last/previous-1)*100);
+  }
+  const label=el('muscleBalancePeriodLabel');if(label)label.textContent=musclePeriod==='week'?'séries por grupo · semana atual (seg–dom)':'séries por grupo · últimos 30 dias';
   document.querySelectorAll('[data-muscle-period]').forEach(button=>{const active=button.dataset.musclePeriod===musclePeriod;button.setAttribute('aria-pressed',String(active));button.classList.toggle('active',active)});
-  bars(el('muscleBalance'),Object.entries(count).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value,extra:dash})));
+  bars(el('muscleBalance'),Object.entries(count).sort((a,b)=>b[1]-a[1]).map(([name,value])=>{const values=changes[name]||[],change=values.length?values.reduce((a,b)=>a+b,0)/values.length:null;return{name,value,extra:change==null?dash:`${change>=0?'+':''}${fmt(change)}%`,tone:change>0?'positive':change<0?'negative':''}}));
 }
 document.querySelectorAll('[data-muscle-period]').forEach(button=>button.addEventListener('click',()=>{
   musclePeriod=button.dataset.musclePeriod;
