@@ -144,7 +144,7 @@ function renderStrengthChart(sets,catalog,sheetTypes,now){
   let comparable=0;
   for(const {group,days} of observations.values()){
     const dates=[...days.keys()].sort();
-    if(!dates.length)continue;
+    if(dates.length<2)continue;
     const baseline=days.get(dates[0]);
     if(!baseline)continue;
     if(dates.length>1)comparable++;
