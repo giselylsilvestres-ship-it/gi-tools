@@ -110,25 +110,84 @@ function renderMuscles(sets,catalog,now){
 }
 
 function renderPRs(sets,start,end){const valid=sets.filter(x=>e1rm(x)!=null&&d(x.date)>=start&&d(x.date)<=end),best={};for(const x of valid){const k=x.exerciseId||x.exercise,v=e1rm(x);if(!best[k]||v>best[k].v)best[k]={...x,v}}const rows=Object.values(best).sort((a,b)=>d(b.date)-d(a.date)).slice(0,4);el('recentPrs').className=rows.length?'pr-list':'strength-empty';el('recentPrs').innerHTML=rows.length?rows.map((x,i)=>`<div class="pr-row"><span class="pr-dot" style="background:${PALETTE[i%PALETTE.length]}"></span><div class="pr-copy"><strong>${x.exercise}</strong><small>${x.date.split('-').reverse().join('/')}</small></div><span class="pr-value">${fmt(x.weight,Number.isInteger(x.weight)?0:1)} kg × ${x.reps}</span></div>`).join(''):dash}
-function renderStrengthChart(sets,now){
-  const target=el('strengthChart');
-  if(!target)return;
-  const cutoff=new Date(now);cutoff.setDate(cutoff.getDate()-29);
-  // Display actual measured performance even before two comparable time windows exist.
-  // Do not average estimated 1RMs of unrelated movements into a fictitious strength trend.
-  const recent=sets.filter(x=>!x.drop&&d(x.date)>=cutoff&&d(x.date)<=now&&e1rm(x)!=null);
-  const best=new Map();
-  for(const x of recent){
-    const key=x.exerciseId||x.exercise,value=e1rm(x);
-    if(!best.has(key)||value>best.get(key).value)best.set(key,{name:x.exercise,value,date:x.date,weight:x.weight,reps:x.reps});
+function renderStrengthChart(sets,catalog,sheetTypes,now){
+  const target=el('strengthChart');if(!target)return;
+  const byId=new Map(catalog.map(x=>[x.id,x]));
+  const byName=new Map(catalog.map(x=>[String(x.name).toLowerCase(),x]));
+  const upper=/peito|costas|bíceps|biceps|tríceps|triceps|ombro|delt|trapézio|trapezio|antebraço|antebraco/i;
+  const lower=/glúte|glute|quadr|posterior|isquio|panturr|adutor|abdutor|perna/i;
+  const observations=new Map();
+  for(const set of sets){
+    if(set.drop||e1rm(set)==null||d(set.date)>now)continue;
+    const exercise=byId.get(set.exerciseId)||byName.get(String(set.exercise).toLowerCase());
+    const muscle=(exercise?.primary_muscles?.length?exercise.primary_muscles:exercise?.muscle_groups||[])[0]||'';
+    const sheetType=sheetTypes.get(set.sheetId);
+    const group=upper.test(muscle)?'Superiores':lower.test(muscle)?'Inferiores':
+      sheetType==='Superiores'?'Superiores':sheetType==='Inferiores'?'Inferiores':null;
+    if(!group)continue;
+    const key=set.exerciseId||String(set.exercise).toLowerCase();
+    if(!observations.has(key))observations.set(key,{group,days:new Map()});
+    const entry=observations.get(key),v=e1rm(set);
+    entry.days.set(set.date,Math.max(entry.days.get(set.date)||0,v));
   }
-  const rows=[...best.values()].sort((a,b)=>b.date.localeCompare(a.date)||b.value-a.value).slice(0,5);
-  if(!rows.length){target.className='strength-empty';target.textContent=dash;return}
-  const max=Math.max(...rows.map(x=>x.value));
-  target.className='strength-exercise-list';
-  target.innerHTML='<div class="strength-method-label">Melhor força estimada por exercício · últimos 30 dias</div>'+
-    rows.map((x,i)=>'<div class="strength-exercise-row"><span class="strength-exercise-name">'+String(x.name).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))+'</span><span class="strength-exercise-bar"><b style="width:'+(x.value/max*100).toFixed(1)+'%;background:'+PALETTE[i%PALETTE.length]+'"></b></span><strong>'+fmt(x.value,1)+' kg</strong></div>').join('')+
-    '<small class="strength-method-note">e1RM estimado a partir da carga e repetições. Exercícios diferentes não devem ser comparados entre si.</small>';
+  // Use each exercise's first measured session as its own 100-point baseline.
+  // This avoids combining kilograms from unrelated machines or movements.
+  const bucketData=new Map();
+  const bucketFor=date=>{
+    const dt=d(date);
+    if(metricsPeriod==='week'){
+      const mon=monday(dt);
+      return {key:mon.toISOString().slice(0,10),label:`${String(mon.getDate()).padStart(2,'0')}/${String(mon.getMonth()+1).padStart(2,'0')}`};
+    }
+    return {key:date.slice(0,7),label:`${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getFullYear()).slice(-2)}`};
+  };
+  let comparable=0;
+  for(const {group,days} of observations.values()){
+    const dates=[...days.keys()].sort();
+    if(!dates.length)continue;
+    const baseline=days.get(dates[0]);
+    if(!baseline)continue;
+    if(dates.length>1)comparable++;
+    const perBucket=new Map();
+    for(const date of dates){
+      const bucket=bucketFor(date),ratio=days.get(date)/baseline*100;
+      const old=perBucket.get(bucket.key);
+      if(!old||ratio>old.value)perBucket.set(bucket.key,{...bucket,value:ratio});
+    }
+    for(const item of perBucket.values()){
+      if(!bucketData.has(item.key))bucketData.set(item.key,{label:item.label,Superiores:[],Inferiores:[]});
+      bucketData.get(item.key)[group].push(item.value);
+    }
+  }
+  const periods=[...bucketData.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([key,value])=>({key,label:value.label,Superiores:value.Superiores.length?value.Superiores.reduce((a,b)=>a+b,0)/value.Superiores.length:null,Inferiores:value.Inferiores.length?value.Inferiores.reduce((a,b)=>a+b,0)/value.Inferiores.length:null}));
+  const unit=metricsPeriod==='week'?'semanal':'mensal';
+  const detail=el('strengthDetail');
+  const last=periods[periods.length-1],first=periods[0];
+  const latestChanges=['Superiores','Inferiores'].map(group=>last?.[group]!=null&&first?.[group]!=null?last[group]-first[group]:null).filter(x=>x!=null);
+  if(detail)detail.textContent=latestChanges.length&&comparable? `${latestChanges.reduce((a,b)=>a+b,0)/latestChanges.length>=0?'+':''}${fmt(latestChanges.reduce((a,b)=>a+b,0)/latestChanges.length)}%` :dash;
+  if(periods.length<2){
+    target.className='strength-empty';
+    target.innerHTML='<div style="font-size:13px;text-align:center">Histórico insuficiente para desenhar a evolução '+unit+'.<div style="font-size:11px;opacity:.7;margin-top:8px">Os registros atuais serão usados como base para as próximas medições.</div></div>';
+    return;
+  }
+  const all=periods.flatMap(p=>[p.Superiores,p.Inferiores]).filter(v=>v!=null);
+  const min=Math.min(95,...all),max=Math.max(105,...all),pad=Math.max(5,(max-min)*.15);
+  const low=Math.floor((min-pad)/5)*5,high=Math.ceil((max+pad)/5)*5;
+  const W=500,H=180,L=40,R=12,T=14,B=30;
+  const x=i=>L+(periods.length===1?0:i/(periods.length-1))*(W-L-R);
+  const y=v=>T+(high-v)/(high-low)*(H-T-B);
+  const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const grid=[0,1,2,3,4].map(i=>{const v=low+(high-low)*i/4;return '<line x1="'+L+'" y1="'+y(v)+'" x2="'+(W-R)+'" y2="'+y(v)+'" stroke="currentColor" opacity=".10"/><text x="'+(L-6)+'" y="'+(y(v)+4)+'" text-anchor="end" fill="currentColor" opacity=".6" font-size="10">'+Math.round(v)+'</text>'}).join('');
+  const lines=[['Superiores','#DCCD8A'],['Inferiores','#475480']].map(([group,color])=>{
+    let path='',previous=false;
+    periods.forEach((p,i)=>{const v=p[group];if(v==null){previous=false;return}path+=(previous?' L ':' M ')+x(i).toFixed(1)+' '+y(v).toFixed(1);previous=true});
+    const dots=periods.map((p,i)=>p[group]==null?'':'<circle cx="'+x(i)+'" cy="'+y(p[group])+'" r="3.5" fill="'+color+'"><title>'+esc(group)+' · '+esc(p.label)+' · '+fmt(p[group])+'</title></circle>').join('');
+    return '<path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+dots;
+  }).join('');
+  const labelStep=Math.max(1,Math.ceil(periods.length/7));
+  const labels=periods.map((p,i)=>i%labelStep===0||i===periods.length-1?'<text x="'+x(i)+'" y="'+(H-9)+'" text-anchor="middle" fill="currentColor" opacity=".65" font-size="10">'+esc(p.label)+'</text>':'').join('');
+  target.className='strength-trend';
+  target.innerHTML='<div class="strength-trend-legend"><span><i style="background:#DCCD8A"></i>Superiores</span><span><i style="background:#475480"></i>Inferiores</span></div><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Evolução '+unit+' da força estimada, com índice base 100 para cada exercício" style="width:100%;height:auto;display:block">'+grid+lines+labels+'</svg><small class="strength-method-note">Índice base 100: média da evolução do e1RM de cada exercício em relação ao seu primeiro registro. Sem treino no período, não há ponto. Não compara cargas absolutas entre exercícios.</small>';
 }
 
 const toggle=el('metricsDetailsToggle'),details=el('metricsDetails');if(toggle&&details)toggle.onclick=()=>{const open=details.hidden;details.hidden=!open;toggle.setAttribute('aria-expanded',String(open));toggle.querySelector('span').textContent=open?'⌃':'⌄'};const old=window.renderMetrics;window.renderMetrics=function(){old?.();render()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(render,150));else setTimeout(render,150);
