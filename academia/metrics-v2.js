@@ -28,7 +28,7 @@ function renderMuscles(sets,catalog,now){
   const today=new Date(now);today.setHours(12,0,0,0);
   const cutoff=musclePeriod==='week'?monday(today):new Date(today);
   if(musclePeriod==='month')cutoff.setDate(cutoff.getDate()-29);
-  const end=new Date(today);if(musclePeriod==='week')end.setDate(cutoff.getDate()+6);
+  const end=musclePeriod==='week'?new Date(cutoff):new Date(today);if(musclePeriod==='week')end.setDate(end.getDate()+6);
   const recent=sets.filter(x=>{const date=d(x.date);return date>=cutoff&&date<=end&&!x.drop});
   const byId=new Map(catalog.map(x=>[x.id,x])),byName=new Map(catalog.map(x=>[String(x.name).toLowerCase(),x])),count={};
   for(const x of recent){
