@@ -46,6 +46,26 @@ document.querySelectorAll('[data-muscle-period]').forEach(button=>button.addEven
 }));
 
 function renderPRs(sets){const valid=sets.filter(x=>e1rm(x)!=null),best={};for(const x of valid){const k=x.exerciseId||x.exercise,v=e1rm(x);if(!best[k]||v>best[k].v)best[k]={...x,v}}const rows=Object.values(best).sort((a,b)=>d(b.date)-d(a.date)).slice(0,4);el('recentPrs').className=rows.length?'pr-list':'strength-empty';el('recentPrs').innerHTML=rows.length?rows.map((x,i)=>`<div class="pr-row"><span class="pr-dot" style="background:${PALETTE[i%PALETTE.length]}"></span><div class="pr-copy"><strong>${x.exercise}</strong><small>${x.date.split('-').reverse().join('/')}</small></div><span class="pr-value">${fmt(x.weight,Number.isInteger(x.weight)?0:1)} kg × ${x.reps}</span></div>`).join(''):dash}
-function renderStrengthChart(sets,now){const target=el('strengthChart'),valid=sets.filter(x=>e1rm(x)!=null),days=[];for(let i=5;i>=0;i--){const end=new Date(now);end.setDate(end.getDate()-i*14);const start=new Date(end);start.setDate(start.getDate()-13);const m=bestByExercise(valid,start,end),vals=Object.values(m);days.push(vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null)}const vals=days.filter(v=>v!=null);if(vals.length<2){target.className='strength-empty';target.textContent=dash;return}const min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,points=days.map((v,i)=>v==null?null:{x:5+i/(days.length-1)*90,y:88-(v-min)/range*68}).filter(Boolean),line=points.map(p=>`${p.x},${p.y}`).join(' '),area=`5,94 ${line} ${points.at(-1).x},94`;target.className='strength-chart';target.innerHTML=`<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Evolução da força"><defs><linearGradient id="strengthFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B57056" stop-opacity=".30"/><stop offset="100%" stop-color="#B57056" stop-opacity=".02"/></linearGradient></defs><polygon points="${area}" fill="url(#strengthFill)"/><polyline points="${line}" fill="none" stroke="#B57056" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>${points.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="1.8" fill="#DCCD8A" stroke="#B57056" stroke-width=".8" vector-effect="non-scaling-stroke"/>`).join('')}</svg>`}
+function renderStrengthChart(sets,now){
+  const target=el('strengthChart');
+  if(!target)return;
+  const cutoff=new Date(now);cutoff.setDate(cutoff.getDate()-29);
+  // Display actual measured performance even before two comparable time windows exist.
+  // Do not average estimated 1RMs of unrelated movements into a fictitious strength trend.
+  const recent=sets.filter(x=>!x.drop&&d(x.date)>=cutoff&&d(x.date)<=now&&e1rm(x)!=null);
+  const best=new Map();
+  for(const x of recent){
+    const key=x.exerciseId||x.exercise,value=e1rm(x);
+    if(!best.has(key)||value>best.get(key).value)best.set(key,{name:x.exercise,value,date:x.date,weight:x.weight,reps:x.reps});
+  }
+  const rows=[...best.values()].sort((a,b)=>b.date.localeCompare(a.date)||b.value-a.value).slice(0,5);
+  if(!rows.length){target.className='strength-empty';target.textContent=dash;return}
+  const max=Math.max(...rows.map(x=>x.value));
+  target.className='strength-exercise-list';
+  target.innerHTML='<div class="strength-method-label">Melhor força estimada por exercício · últimos 30 dias</div>'+
+    rows.map((x,i)=>'<div class="strength-exercise-row"><span class="strength-exercise-name">'+String(x.name).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))+'</span><span class="strength-exercise-bar"><b style="width:'+(x.value/max*100).toFixed(1)+'%;background:'+PALETTE[i%PALETTE.length]+'"></b></span><strong>'+fmt(x.value,1)+' kg</strong></div>').join('')+
+    '<small class="strength-method-note">e1RM estimado a partir da carga e repetições. Exercícios diferentes não devem ser comparados entre si.</small>';
+}
+
 const toggle=el('metricsDetailsToggle'),details=el('metricsDetails');if(toggle&&details)toggle.onclick=()=>{const open=details.hidden;details.hidden=!open;toggle.setAttribute('aria-expanded',String(open));toggle.querySelector('span').textContent=open?'⌃':'⌄'};const old=window.renderMetrics;window.renderMetrics=function(){old?.();render()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(render,150));else setTimeout(render,150);
 })();
